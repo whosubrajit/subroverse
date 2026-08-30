@@ -103,6 +103,35 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Pub
           <input className={fieldClass} type="url" required value={settings.profileContactUrl} onChange={e => update("profileContactUrl", e.target.value)} />
         </label>
       </fieldset>
+      <fieldset disabled={pending} className="space-y-5 rounded-2xl border border-white/10 bg-[#151120] p-6">
+        <legend className="font-display px-2 text-2xl italic">About Page Content</legend>
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className="block text-sm text-[#cfc4dc]">Bio Name
+            <input className={fieldClass} required maxLength={100} value={settings.aboutBioName} onChange={e => update("aboutBioName", e.target.value)} />
+          </label>
+          <label className="block text-sm text-[#cfc4dc]">Bio Subtitle
+            <input className={fieldClass} required maxLength={100} value={settings.aboutBioTitle} onChange={e => update("aboutBioTitle", e.target.value)} />
+          </label>
+        </div>
+        <label className="block text-sm text-[#cfc4dc]">Biography Text
+          <textarea className={fieldClass} required maxLength={2000} rows={5} value={settings.aboutBioText} onChange={e => update("aboutBioText", e.target.value)} />
+        </label>
+        <hr className="border-white/10 my-6" />
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className="block text-sm text-[#cfc4dc]">Site Eyebrow
+            <input className={fieldClass} required maxLength={100} value={settings.aboutSiteEyebrow} onChange={e => update("aboutSiteEyebrow", e.target.value)} />
+          </label>
+          <label className="block text-sm text-[#cfc4dc]">Site Title
+            <textarea className={fieldClass} required maxLength={150} rows={2} value={settings.aboutSiteTitle} onChange={e => update("aboutSiteTitle", e.target.value)} />
+          </label>
+        </div>
+        <label className="block text-sm text-[#cfc4dc]">Site Description Text
+          <textarea className={fieldClass} required maxLength={2000} rows={4} value={settings.aboutSiteText} onChange={e => update("aboutSiteText", e.target.value)} />
+        </label>
+        <label className="block text-sm text-[#cfc4dc]">Pull Quote
+          <textarea className={fieldClass} required maxLength={500} rows={2} value={settings.aboutSiteQuote} onChange={e => update("aboutSiteQuote", e.target.value)} />
+        </label>
+      </fieldset>
       <div className="sticky bottom-0 rounded-2xl border border-white/10 bg-[#120e1f] p-5 shadow-xl">
         <div className="flex flex-wrap items-center gap-4">
           <button disabled={pending || !dirty} className="min-h-11 rounded-full bg-[#b896d1] px-6 text-sm text-[#120e1f] disabled:opacity-50">{pending ? "Saving…" : "Save settings"}</button>

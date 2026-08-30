@@ -474,28 +474,16 @@ function AboutPage({ onNavigate, onBrand, settings }: { onNavigate: (p: Page) =>
           <div className="flex-1 pt-2">
             <p className="font-cursive text-[#b896d1] text-base opacity-70 mb-2">the author</p>
             <h1 className="font-display font-light italic text-4xl text-[#f0ebf5] mb-1 leading-tight">
-              Subro
+              {settings.aboutBioName}
             </h1>
             <p className="font-body text-xs text-[#8474a0] mb-6 tracking-widest uppercase">
-              Writer · Dhaka
+              {settings.aboutBioTitle}
             </p>
-            <p className="font-body text-sm text-[#9080aa] leading-relaxed mb-4">
-              Subro writes because the feeling is always larger than the silence
-              it lives in. These stories began as private notes — observations
-              too precise to discard, letters too long to send — and became
-              something quieter than confession and louder than a diary.
-            </p>
-            <p className="font-body text-sm text-[#9080aa] leading-relaxed mb-4">
-              He is interested in the small liturgies of loving someone: the
-              counterclockwise stir, the second laugh, the paper that says{" "}
-              <em className="text-[#c4b4d8]">don&apos;t forget</em>. He writes
-              in Bengali and English, sometimes in the same sentence, because
-              neither language alone is sufficient.
-            </p>
-            <p className="font-body text-sm text-[#9080aa] leading-relaxed">
-              This site is not meant to be found. If you are here, you
-              understand.
-            </p>
+            {settings.aboutBioText.split("\n\n").map((paragraph, i) => (
+              <p key={i} className={`font-body text-sm text-[#9080aa] leading-relaxed ${i !== settings.aboutBioText.split("\n\n").length - 1 ? "mb-4" : ""}`}>
+                {paragraph}
+              </p>
+            ))}
           </div>
         </div>
 
@@ -504,26 +492,19 @@ function AboutPage({ onNavigate, onBrand, settings }: { onNavigate: (p: Page) =>
         {/* About the site */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 items-start">
           <div className="md:col-span-2">
-            <p className="font-cursive text-[#b896d1] text-base opacity-70 mb-4">about this place</p>
-            <h2 className="font-display font-light italic text-4xl text-[#f0ebf5] mb-7 leading-tight">
-              A garden of
-              <br />
-              quiet devotion
+            <p className="font-cursive text-[#b896d1] text-base opacity-70 mb-4">{settings.aboutSiteEyebrow}</p>
+            <h2 className="font-display font-light italic text-4xl text-[#f0ebf5] mb-7 leading-tight whitespace-pre-line">
+              {settings.aboutSiteTitle}
             </h2>
-            <p className="font-body text-[#9080aa] leading-relaxed mb-5 text-sm">
-              I write because loving her has made the language feel
-              insufficient, and I keep trying anyway. This site is not meant to
-              be found. If you are here, you are either her, or you understand
-              what it means to feel something too large for silence.
-            </p>
-            <p className="font-body text-[#9080aa] leading-relaxed text-sm">
-              Everything here is true. The names are changed. The feelings are
-              not.
-            </p>
+            {settings.aboutSiteText.split("\n\n").map((paragraph, i) => (
+              <p key={i} className={`font-body text-[#9080aa] leading-relaxed text-sm ${i !== settings.aboutSiteText.split("\n\n").length - 1 ? "mb-5" : ""}`}>
+                {paragraph}
+              </p>
+            ))}
           </div>
           <div className="border-l border-[rgba(184,150,209,0.15)] pl-8 pt-2">
             <blockquote className="font-display italic text-xl text-[#b896d1] font-light leading-snug">
-              "She is the metaphor I keep reaching for and never quite finishing."
+              {settings.aboutSiteQuote}
             </blockquote>
           </div>
         </div>
