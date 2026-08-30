@@ -30,7 +30,7 @@ export default async function PublicStoryPage({ params }: StoryPageProps) {
   const story = await findStory((await params).slug)
   if (!story) notFound()
 
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8443"
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app"
   const articleJsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",

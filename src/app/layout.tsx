@@ -4,7 +4,7 @@ import SiteBackground from "@/components/SiteBackground"
 import "@/index.css"
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8443"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app"),
   title: {
     default: "SubroVerse",
     template: "%s · SubroVerse",
@@ -35,7 +35,7 @@ const jsonLd = {
     {
       "@type": "WebSite",
       name: "SubroVerse",
-      url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8443",
+      url: process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app",
       description: "A love letter that never learned to stop.",
       inLanguage: "en",
       author: { "@id": "#author" },
@@ -44,7 +44,7 @@ const jsonLd = {
       "@type": "Person",
       "@id": "#author",
       name: "Subro",
-      url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8443",
+      url: process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app",
     },
   ],
 }

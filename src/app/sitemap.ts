@@ -4,7 +4,7 @@ import { getDb } from "@/db"
 import { stories } from "@/db/schema"
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:8443"
+  const origin = process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app"
   const base: MetadataRoute.Sitemap = [
     { url: origin, changeFrequency: "weekly", priority: 1 },
   ]
