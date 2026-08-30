@@ -78,6 +78,31 @@ export default function SettingsForm({ initialSettings }: { initialSettings: Pub
         </label>
         <p className="text-xs leading-6 text-[#a99bb9]">Dismissed invitations stay dismissed in that browser. Emails are stored in Neon; sending stays manual through Gmail. Saving does not send any email.</p>
       </fieldset>
+      <fieldset disabled={pending} className="space-y-5 rounded-2xl border border-white/10 bg-[#151120] p-6">
+        <legend className="font-display px-2 text-2xl italic">Author Profile</legend>
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className="block text-sm text-[#cfc4dc]">Name
+            <input className={fieldClass} required maxLength={100} value={settings.profileName} onChange={e => update("profileName", e.target.value)} />
+          </label>
+          <label className="block text-sm text-[#cfc4dc]">Title (e.g. Author)
+            <input className={fieldClass} required maxLength={100} value={settings.profileTitle} onChange={e => update("profileTitle", e.target.value)} />
+          </label>
+        </div>
+        <div className="grid gap-5 md:grid-cols-2">
+          <label className="block text-sm text-[#cfc4dc]">Handle
+            <div className="relative mt-2 flex items-center">
+              <span className="absolute left-4 text-[#a99bb9]">@</span>
+              <input className={`${fieldClass} !mt-0 pl-9`} required maxLength={100} value={settings.profileHandle} onChange={e => update("profileHandle", e.target.value)} />
+            </div>
+          </label>
+          <label className="block text-sm text-[#cfc4dc]">Contact Button Text
+            <input className={fieldClass} required maxLength={50} value={settings.profileContactText} onChange={e => update("profileContactText", e.target.value)} />
+          </label>
+        </div>
+        <label className="block text-sm text-[#cfc4dc]">Contact Link URL
+          <input className={fieldClass} type="url" required value={settings.profileContactUrl} onChange={e => update("profileContactUrl", e.target.value)} />
+        </label>
+      </fieldset>
       <div className="sticky bottom-0 rounded-2xl border border-white/10 bg-[#120e1f] p-5 shadow-xl">
         <div className="flex flex-wrap items-center gap-4">
           <button disabled={pending || !dirty} className="min-h-11 rounded-full bg-[#b896d1] px-6 text-sm text-[#120e1f] disabled:opacity-50">{pending ? "Saving…" : "Save settings"}</button>

@@ -437,7 +437,7 @@ function BotanicalMonogram() {
 /* ════════════════════════
    ABOUT PAGE
    ════════════════════════ */
-function AboutPage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void; onBrand: () => void }) {
+function AboutPage({ onNavigate, onBrand, settings }: { onNavigate: (p: Page) => void; onBrand: () => void; settings: PublicSiteSettings }) {
   const reduced = useReducedMotion()
 
   return (
@@ -453,15 +453,17 @@ function AboutPage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void; onB
           {/* Interactive author profile */}
           <div className="flex-none w-full md:w-auto">
             <ProfileCard
-              handle="subra.lmao"
-              contactText="Contact Me"
+              name={settings.profileName}
+              title={settings.profileTitle}
+              handle={settings.profileHandle}
+              contactText={settings.profileContactText}
               avatarUrl={suberoImg}
               miniAvatarUrl={suberoImg}
               iconUrl={assetUrl(profileFlowerAsset)}
               showUserInfo
               enableTilt={!reduced}
               enableMobileTilt={false}
-              onContactClick={() => window.location.assign("https://subro.openinapp.co/insta")}
+              onContactClick={() => window.location.assign(settings.profileContactUrl)}
               behindGlowEnabled
               behindGlowColor="rgba(184, 150, 209, 0.58)"
               innerGradient="linear-gradient(145deg, rgba(96,73,110,.55) 0%, rgba(113,196,255,.18) 100%)"
@@ -1061,7 +1063,7 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
       />
     )
   } else if (page === "about") {
-    pageContent = <AboutPage onNavigate={navigate} onBrand={replayWelcomeAndGoHome} />
+    pageContent = <AboutPage onNavigate={navigate} onBrand={replayWelcomeAndGoHome} settings={settings} />
   } else if (page === "write") {
     pageContent = <WriteToMePage onNavigate={navigate} onBrand={replayWelcomeAndGoHome} />
   } else if (page === "stories") {
