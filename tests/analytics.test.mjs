@@ -1,0 +1,63 @@
+import assert from "node:assert/strict"
+import test from "node:test"
+import { analyticsCountUrl, fetchTrafficReport } from "../src/lib/analytics-report.ts"
+import { isLocalAnalyticsHost, isPublicAnalyticsPath, publicAnalyticsLocation, sanitizeAnalyticsUrl } from "../src/lib/analytics-policy.ts"
+
+test("hash pages map to distinct analytics paths and stories share canonical paths", () => {
+  assert.deepEqual(publicAnalyticsLocation("home"), { path: "/", route: "/" })
+  for (const page of ["about", "write", "stories"]) {
+    assert.deepEqual(publicAnalyticsLocation(page), { path: `/${page}`, route: `/${page}` })
+  }
+  assert.deepEqual(publicAnalyticsLocation("home", { id: "123", slug: "my-story" }), { path: "/stories/my-story", route: "/stories/[slug]" })
+  assert.equal(publicAnalyticsLocation("admin"), null)
+})
+
+test("tracking strips query strings and fragments and excludes private routes", () => {
+  assert.equal(sanitizeAnalyticsUrl("https://example.test/write?email=private#secret"), "https://example.test/write")
+  for (const path of ["/admin", "/admin/reset-password", "/api/messages", "/unknown", "//evil.test"]) {
+    assert.equal(isPublicAnalyticsPath(path), false)
+    assert.equal(sanitizeAnalyticsUrl(`https://example.test${path}?token=secret`), null)
+  }
+  assert.equal(sanitizeAnalyticsUrl("not a URL"), null)
+})
+
+test("development hosts do not collect production traffic", () => {
+  for (const host of ["localhost", "test.localhost", "127.0.0.1", "[::1]", "0.0.0.0"]) assert.equal(isLocalAnalyticsHost(host), true)
+  assert.equal(isLocalAnalyticsHost("subroverse.vercel.app"), false)
+})
+
+test("missing credentials do not call Vercel or invent totals", async () => {
+  const result = await fetchTrafficReport({}, () => { throw new Error("Must not fetch") })
+  assert.equal(result.status, "setup")
+  assert.equal("visitors" in result, false)
+})
+
+test("Vercel count request stays server-side and returns distinct visitors and views", async () => {
+  const result = await fetchTrafficReport({ token: "test-only", projectId: "prj_test", teamId: "team_test" }, async (url, options) => {
+    assert.equal(url.origin, "https://api.vercel.com")
+    assert.equal(url.pathname, "/v1/query/web-analytics/visits/count")
+    assert.equal(url.searchParams.get("projectId"), "prj_test")
+    assert.equal(url.searchParams.get("teamId"), "team_test")
+    assert.match(url.searchParams.get("filter"), /not startswith\(requestPath, '\/admin'\)/)
+    assert.equal(url.toString().includes("test-only"), false)
+    assert.equal(options.headers.Authorization, "Bearer test-only")
+    assert.equal(options.next.revalidate, 300)
+    return Response.json({ version: 1, data: { visitors: 23, pageviews: 57 } })
+  })
+  assert.deepEqual(result, { status: "ready", visitors: 23, pageviews: 57 })
+  assert.equal(analyticsCountUrl({ projectId: "prj_personal" }).searchParams.has("teamId"), false)
+})
+
+test("zero traffic is distinct from malformed or unavailable reports", async () => {
+  const config = { token: "test-only", projectId: "prj_test" }
+  assert.deepEqual(await fetchTrafficReport(config, async () => Response.json({ data: { visitors: 0, pageviews: 0 } })), { status: "ready", visitors: 0, pageviews: 0 })
+  for (const payload of [{}, { data: [] }, { data: { visitors: -1, pageviews: 4 } }, { data: { visitors: "23", pageviews: 57 } }]) {
+    assert.equal((await fetchTrafficReport(config, async () => Response.json(payload))).status, "error")
+  }
+  for (const status of [401, 402, 403, 429, 500]) {
+    const result = await fetchTrafficReport(config, async () => new Response("private upstream detail", { status }))
+    assert.equal(result.status, "error")
+    assert.equal(result.message.includes("private upstream detail"), false)
+  }
+  assert.equal((await fetchTrafficReport(config, async () => { throw new Error("timeout") })).status, "error")
+})
