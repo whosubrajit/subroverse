@@ -27,25 +27,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Open [http://localhost:8443](http://localhost:8443). Never commit `.env.local`.
-
-## Environment variables
-
-| Variable | Required | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_SITE_URL` | Yes | Canonical site origin, without a trailing slash |
-| `DATABASE_URL` | Yes | Pooled Neon Postgres connection string |
-| `NEON_AUTH_BASE_URL` | Admin | Server-side Neon Auth endpoint |
-| `NEXT_PUBLIC_NEON_AUTH_URL` | Admin | Public Neon Auth endpoint |
-| `NEON_AUTH_COOKIE_SECRET` | Admin | Random secret of at least 32 characters |
-| `ADMIN_EMAILS` | Admin | Comma-separated allowlist of Neon Auth accounts |
-| `BLOB_READ_WRITE_TOKEN` | Uploads | Vercel Blob read/write token |
-| `VERCEL_TOKEN` | Admin traffic counts | Server-only Vercel access token with access to the analytics project |
-| `VERCEL_PROJECT_ID` | Admin traffic counts | Vercel project ID (`prj_…`) |
-| `VERCEL_TEAM_ID` | Team-owned analytics project | Owning Vercel team ID (`team_…`); omit for personal projects |
-
-Create the allowed users in Neon Auth and place their email addresses only in `.env.local` and the deployment environment. Passwords are managed by Neon Auth and do not belong in this repository.
-
+Open [http://localhost:8443](http://localhost:8443). 
 ## Database workflow
 
 The schema lives in `src/db/schema.ts`; generated SQL is checked into `drizzle/`.
