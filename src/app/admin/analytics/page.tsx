@@ -5,7 +5,7 @@ import { getDb } from "@/db"
 import { campaigns, contactMessages, stories, subscribers } from "@/db/schema"
 import { getAdminUser } from "@/lib/admin"
 import TrafficSummary from "@/components/admin/TrafficSummary"
-import { getAdminTrafficReport } from "@/lib/vercel-analytics"
+import { getAdminTrafficReport } from "@/lib/cloudflare-analytics"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Analytics", robots: { index: false, follow: false } }

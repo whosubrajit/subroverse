@@ -4,7 +4,7 @@ import StudioDashboard from "@/components/admin/StudioDashboard"
 import { getDb } from "@/db"
 import { contactMessages, stories, subscribers } from "@/db/schema"
 import { getAdminUser } from "@/lib/admin"
-import { getAdminTrafficReport } from "@/lib/vercel-analytics"
+import { getAdminTrafficReport } from "@/lib/cloudflare-analytics"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Writer’s room", robots: { index: false, follow: false } }
