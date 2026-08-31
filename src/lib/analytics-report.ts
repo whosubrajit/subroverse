@@ -8,8 +8,10 @@ const cloudflareResponseSchema = z.object({
           httpRequests1dGroups: z.array(
             z.object({
               sum: z.object({
-                visits: z.number().int().nonnegative(),
                 pageViews: z.number().int().nonnegative(),
+              }),
+              uniq: z.object({
+                uniques: z.number().int().nonnegative(),
               }),
             })
           ),
@@ -38,8 +40,10 @@ export function analyticsGraphQLQuery(zoneId: string) {
               filter: { date_gt: $dateGt }
             ) {
               sum {
-                visits
                 pageViews
+              }
+              uniq {
+                uniques
               }
             }
           }
@@ -90,7 +94,7 @@ export async function fetchTrafficReport(config: AnalyticsConfig, fetcher: typeo
     const zones = result.data.data.viewer.zones
     if (zones.length > 0) {
       for (const group of zones[0].httpRequests1dGroups) {
-        totalVisitors += group.sum.visits
+        totalVisitors += group.uniq.uniques
         totalPageviews += group.sum.pageViews
       }
     }

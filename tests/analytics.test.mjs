@@ -47,7 +47,10 @@ test("Cloudflare count request stays server-side and returns distinct visitors a
           zones: [
             {
               httpRequests1dGroups: [
-                { sum: { visits: 23, pageViews: 57 } }
+                { 
+                  sum: { pageViews: 57 },
+                  uniq: { uniques: 23 }
+                }
               ]
             }
           ]
