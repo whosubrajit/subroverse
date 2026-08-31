@@ -1076,7 +1076,7 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
             <br />
             <em className="text-[#b896d1] whitespace-nowrap">a storyverse by</em>
             <br />
-            Subraaaaaaajit
+            Subrajit
           </h1>
           <p className="font-body text-[#9080aa] leading-relaxed text-base max-w-md">
             {settings.homeIntroduction}

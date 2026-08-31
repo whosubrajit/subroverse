@@ -3,17 +3,29 @@ import type { ReactNode } from "react"
 import SiteBackground from "@/components/SiteBackground"
 import "@/index.css"
 
+const getBaseUrl = () => {
+  let url = process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.com"
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    url = "https://" + url
+  }
+  try {
+    return new URL(url)
+  } catch (e) {
+    return new URL("https://subroverse.com")
+  }
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app"),
+  metadataBase: getBaseUrl(),
   title: {
     default: "SubroVerse",
     template: "%s · SubroVerse",
   },
   description:
-    "Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
+    "Subrajit's Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
   applicationName: "SubroVerse",
-  authors: [{ name: "Subro" }],
-  creator: "Subro",
+  authors: [{ name: "Subrajit" }],
+  creator: "Subrajit",
   openGraph: {
     type: "website",
     siteName: "SubroVerse",
@@ -22,6 +34,12 @@ export const metadata: Metadata = {
   },
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
+  keywords: ["Subrajit", "Storytelling", "Short Stories", "Letters", "Creative Writing", "SubroVerse", "Subro", "Subrajit's Letters", "Dibyo Singho Barua", "SubroVerse by Subrajit", "Dibyo Singho Barua Subrajit"],
+  verification: {
+    other: {
+      "msvalidate.01": "6EEBDA0D3D95E60338D7EABB5A5F3D91",
+    },
+  },
 }
 
 export const viewport: Viewport = {
@@ -35,16 +53,16 @@ const jsonLd = {
     {
       "@type": "WebSite",
       name: "SubroVerse",
-      url: process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app",
-      description: "A love letter that never learned to stop.",
+      url: getBaseUrl().origin,
+      description: "Subrajit's Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
       inLanguage: "en",
       author: { "@id": "#author" },
     },
     {
       "@type": "Person",
       "@id": "#author",
-      name: "Subro",
-      url: process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.vercel.app",
+      name: "Subrajit",
+      url: getBaseUrl().origin,
     },
   ],
 }
