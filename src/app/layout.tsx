@@ -67,7 +67,6 @@ const jsonLd = {
   ],
 }
 
-import { Analytics } from "@vercel/analytics/react"
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
@@ -79,7 +78,6 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         />
         <SiteBackground />
         <div className="site-content">{children}</div>
-        <Analytics />
       </body>
     </html>
   )
