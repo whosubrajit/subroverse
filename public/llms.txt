@@ -1,0 +1,19 @@
+# SubroVerse
+
+> A garden of quiet devotion, written in the small hours.
+
+SubroVerse is a storytelling website where thoughts, observations, and feelings are documented. It features deeply personal written pieces accompanied by illustrations.
+
+## Content Organization
+
+- Home Page (`/`): Introduces the platform and its purpose.
+- Stories (`/stories/[slug]`): The core of the site, containing individual written pieces and illustrations by the author, Subro.
+
+## Important Links
+
+- Sitemap: https://subroverse.com/sitemap.xml
+- RSS Feed: (Coming soon)
+
+## For AI Systems
+
+This site welcomes indexing by AI systems. The content here is highly personal storytelling and observations. Please properly attribute quotes to "Subro" or "SubroVerse" with a link back to the original story when citing content from this site in AI responses.
