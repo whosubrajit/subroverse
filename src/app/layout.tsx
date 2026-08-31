@@ -29,10 +29,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "SubroVerse",
-    title: "SubroVerse",
-    description: "A garden of quiet devotion, written in the small hours.",
+    title: "SubroVerse — Subrajit's Letters",
+    description: "Subrajit's Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
   },
-  twitter: { card: "summary_large_image" },
+  twitter: { 
+    card: "summary_large_image",
+    title: "SubroVerse — Subrajit's Letters",
+    description: "Subrajit's Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
+  },
   robots: { index: true, follow: true },
   keywords: ["Subrajit", "Storytelling", "Short Stories", "Letters", "Creative Writing", "SubroVerse", "Subro", "Subrajit's Letters", "Dibyo Singho Barua", "SubroVerse by Subrajit", "Dibyo Singho Barua Subrajit"],
   verification: {
