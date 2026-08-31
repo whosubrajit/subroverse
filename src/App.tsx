@@ -156,33 +156,36 @@ function Nav({
               ← back
             </button>
           )}
-          <button
-            onClick={() => onNavigate("about")}
+          <a
+            href="/about"
+            onClick={(e) => { e.preventDefault(); onNavigate("about"); }}
             className={`font-body text-xs tracking-widest uppercase transition-colors ${page === "about"
               ? "text-[#b896d1]"
               : "text-[#9080aa] hover:text-[#b896d1]"
               }`}
           >
             about
-          </button>
-          <button
-            onClick={() => onNavigate("stories")}
+          </a>
+          <a
+            href="/stories"
+            onClick={(e) => { e.preventDefault(); onNavigate("stories"); }}
             className={`font-body text-xs tracking-widest uppercase transition-colors ${focusRing} ${page === "home" || page === "stories"
               ? "text-[#b896d1]"
               : "text-[#9080aa] hover:text-[#b896d1]"
               }`}
           >
             stories
-          </button>
-          <button
-            onClick={() => onNavigate("write")}
+          </a>
+          <a
+            href="/write"
+            onClick={(e) => { e.preventDefault(); onNavigate("write"); }}
             className={`font-body text-xs tracking-widest uppercase transition-colors ${page === "write"
               ? "text-[#b896d1]"
               : "text-[#9080aa] hover:text-[#b896d1]"
               }`}
           >
             write to me
-          </button>
+          </a>
         </div>
       </div>
     </nav>

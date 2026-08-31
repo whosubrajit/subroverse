@@ -18,7 +18,7 @@ const getBaseUrl = () => {
 export const metadata: Metadata = {
   metadataBase: getBaseUrl(),
   title: {
-    default: "SubroVerse",
+    default: "SubroVerse — Subrajit's Letters",
     template: "%s · SubroVerse",
   },
   description:
