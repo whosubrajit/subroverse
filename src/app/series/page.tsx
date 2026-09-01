@@ -5,14 +5,13 @@ import { readPublicPageData } from "@/lib/public-page-data"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "Story Series",
-  description: "Browse all story collections and series written by Subrajit.",
+  title: "Story Series | SubroVerse",
+  description: "Read all story series written by Subrajit on SubroVerse.",
   alternates: { canonical: "/series" },
   openGraph: {
-    title: "Story Series",
-    description: "Browse all story collections and series written by Subrajit.",
+    title: "Story Series | SubroVerse",
+    description: "Read all story series written by Subrajit on SubroVerse.",
     url: "/series",
-    images: ["/opengraph-image.png"],
   },
 }
 

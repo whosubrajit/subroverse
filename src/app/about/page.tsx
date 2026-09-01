@@ -13,7 +13,6 @@ export const metadata: Metadata = {
     title: "About Subrajit | SubroVerse",
     description: "Meet Subrajit, also known as Dibyo Singho Barua Subrajit, the writer behind SubroVerse.",
     url: "/about",
-    images: ["/opengraph-image.png"],
   },
 }
 
