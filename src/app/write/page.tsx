@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   },
 }
 
-export default async function WritePage() {
-  const { settings, stories } = await readPublicPageData()
-  return <PublicSite settings={settings} initialStories={stories} initialPage="write" />
+export default async function WriteIndexPage() {
+  const { settings, stories, seriesMetadata } = await readPublicPageData()
+  return <PublicSite settings={settings} initialStories={stories} initialPage="write" seriesMetadata={seriesMetadata} />
 }

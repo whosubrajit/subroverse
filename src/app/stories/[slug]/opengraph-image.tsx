@@ -13,6 +13,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   let title = "Story not found"
   let format = "Prose"
   let series: string | null = null
+  let excerpt: string | null = null
 
   if (process.env.DATABASE_URL) {
     const story = await findPublicStory(slug)
@@ -20,6 +21,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
       title = story.title
       format = story.format
       series = story.series
+      excerpt = story.excerpt
     }
   }
 
@@ -78,6 +80,23 @@ export default async function Image({ params }: { params: Promise<{ slug: string
         >
           {title}
         </h1>
+
+        {excerpt && (
+          <p
+            style={{
+              fontSize: 24,
+              color: "#c49ce6",
+              fontStyle: "italic",
+              lineHeight: 1.4,
+              marginTop: 20,
+              marginBottom: 0,
+              maxWidth: 800,
+              whiteSpace: "pre-wrap",
+            }}
+          >
+            {excerpt.slice(0, 160)}{excerpt.length > 160 ? "..." : ""}
+          </p>
+        )}
 
         {/* Decorative line */}
         <div

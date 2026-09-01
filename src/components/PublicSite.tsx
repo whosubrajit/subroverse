@@ -7,11 +7,13 @@ export default function PublicSite({
   initialStories,
   initialPage = "home",
   initialSeries = null,
+  seriesMetadata = [],
 }: {
   settings: PublicSiteSettings
   initialStories: PublicStory[]
   initialPage?: string
   initialSeries?: string | null
+  seriesMetadata?: Array<{ name: string; description: string }>
 }) {
-  return <App settings={settings} initialStories={initialStories} initialPage={initialPage} initialSeries={initialSeries} />
+  return <App settings={settings} initialStories={initialStories} initialPage={initialPage} initialSeries={initialSeries} seriesMetadata={seriesMetadata} />
 }

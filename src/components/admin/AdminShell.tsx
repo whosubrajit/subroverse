@@ -8,6 +8,7 @@ import AdminSignOut from "./AdminSignOut"
 const navigation = [
   ["Overview", "⌘", "/admin"],
   ["Stories", "✎", "/admin/stories"],
+  ["Series", "📚", "/admin/series"],
   ["Media", "◫", "/admin/media"],
   ["Messages", "☷", "/admin/messages"],
   ["Newsletter", "✉", "/admin/newsletter"],

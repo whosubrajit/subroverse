@@ -810,12 +810,14 @@ function StoriesArchivePage({
   onOpenStory,
   onBrand,
   seriesFilter,
+  seriesMetadata = [],
 }: {
   allStories: Story[]
   onNavigate: (p: Page, skipAnimation?: boolean) => void
   onOpenStory: (s: Story) => void
   onBrand: () => void
   seriesFilter?: string
+  seriesMetadata?: Array<{ name: string; description: string }>
 }) {
   const reduced = useReducedMotion()
 
@@ -856,6 +858,13 @@ function StoriesArchivePage({
           <h1 className="font-display font-light italic text-4xl md:text-5xl text-[#f0ebf5] leading-tight">
             {seriesFilter ? seriesFilter : "All stories"}
           </h1>
+          
+          {seriesFilter && (
+            <p className="font-body text-base md:text-lg text-[#f0ebf5] mt-4 mb-2 italic opacity-90 leading-relaxed max-w-2xl">
+              {seriesMetadata.find(m => m.name === seriesFilter)?.description || "Every piece written in this collection"}
+            </p>
+          )}
+
           <p className="font-body text-sm text-[#8474a0] mt-3">
             {sorted.length} {sorted.length === 1 ? "piece" : "pieces"} · newest first
           </p>
@@ -1047,11 +1056,13 @@ export default function App({
   initialStories,
   initialPage = "home",
   initialSeries = null,
+  seriesMetadata = [],
 }: {
   settings: PublicSiteSettings
   initialStories?: PublicStory[]
   initialPage?: string
   initialSeries?: string | null
+  seriesMetadata?: Array<{ name: string; description: string }>
 }) {
   const reduced = useReducedMotion()
   const [page, setPage] = useState<Page>(initialPage as Page)
@@ -1231,6 +1242,7 @@ export default function App({
         onNavigate={navigate}
         onOpenStory={openStory}
         onBrand={replayWelcomeAndGoHome}
+        seriesMetadata={seriesMetadata}
       />
     )
   } else if (page === "series") {
@@ -1241,6 +1253,7 @@ export default function App({
         onOpenStory={openStory}
         onBrand={replayWelcomeAndGoHome}
         seriesFilter={currentSeries ?? undefined}
+        seriesMetadata={seriesMetadata}
       />
     )
   } else if (page === "series-index") {

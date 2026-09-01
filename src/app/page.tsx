@@ -9,6 +9,6 @@ export const metadata: Metadata = {
 }
 
 export default async function HomePage() {
-  const { settings, stories } = await readPublicPageData()
-  return <PublicSite settings={settings} initialStories={stories} />
+  const { settings, stories, seriesMetadata } = await readPublicPageData()
+  return <PublicSite settings={settings} initialStories={stories} seriesMetadata={seriesMetadata} />
 }

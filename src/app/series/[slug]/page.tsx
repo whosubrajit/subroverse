@@ -29,7 +29,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
   const seriesName = await findPublicSeries(slug)
   if (!seriesName) notFound()
 
-  const { settings, stories } = await readPublicPageData()
+  const { settings, stories, seriesMetadata } = await readPublicPageData()
   const origin = getSiteUrl().origin
   const seriesStories = stories.filter((story) => story.series === seriesName)
   const collectionJsonLd = {
@@ -66,7 +66,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionJsonLd).replace(/</g, "\\u003c") }} />
-      <PublicSite settings={settings} initialStories={stories} initialPage="series" initialSeries={seriesName} />
+      <PublicSite settings={settings} initialStories={stories} initialPage="series" initialSeries={seriesName} seriesMetadata={seriesMetadata} />
     </>
   )
 }

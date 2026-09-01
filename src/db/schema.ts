@@ -249,3 +249,11 @@ export const auditLogs = pgTable(
 export type StoryRecord = typeof stories.$inferSelect
 export type NewStoryRecord = typeof stories.$inferInsert
 export type SubscriberRecord = typeof subscribers.$inferSelect
+
+export const seriesMetadata = pgTable("series_metadata", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  name: text("name").notNull().unique(),
+  description: text("description").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+})

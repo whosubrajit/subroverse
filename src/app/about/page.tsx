@@ -6,18 +6,18 @@ import { getSiteUrl } from "@/lib/site-url"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "About Subrajit | SubroVerse",
+  title: "About Subrajit",
   description: "Meet Subrajit—Dibyo Singho Barua Subrajit—the writer behind SubroVerse and this quiet garden of Bengali and English letters.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About Subrajit | SubroVerse",
+    title: "About Subrajit",
     description: "Meet Subrajit, also known as Dibyo Singho Barua Subrajit, the writer behind SubroVerse.",
     url: "/about",
   },
 }
 
 export default async function AboutPage() {
-  const { settings, stories } = await readPublicPageData()
+  const { settings, stories, seriesMetadata } = await readPublicPageData()
   const origin = getSiteUrl().origin
   const profileJsonLd = {
     "@context": "https://schema.org",
@@ -38,7 +38,7 @@ export default async function AboutPage() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(profileJsonLd).replace(/</g, "\\u003c") }} />
-      <PublicSite settings={settings} initialStories={stories} initialPage="about" />
+      <PublicSite settings={settings} initialStories={stories} initialPage="about" seriesMetadata={seriesMetadata} />
     </>
   )
 }
