@@ -165,8 +165,8 @@ export default function StoryEditor({ initialStory }: { initialStory?: Partial<E
             <details className="rounded-2xl border border-white/[.06] bg-[#151120] p-5">
               <summary className="font-display cursor-pointer text-xl font-light italic">SEO & sharing</summary>
               <div className="mt-5 space-y-4">
-                <div><label htmlFor="seo-title" className={labelClass}>Search title · {story.seoTitle.length}/70</label><input id="seo-title" value={story.seoTitle} onChange={(event) => update("seoTitle", event.target.value)} className={fieldClass} /></div>
-                <div><label htmlFor="seo-description" className={labelClass}>Description · {story.seoDescription.length}/170</label><textarea id="seo-description" rows={3} value={story.seoDescription} onChange={(event) => update("seoDescription", event.target.value)} className={fieldClass} /></div>
+                <div><label htmlFor="seo-title" className={labelClass}>Search title</label><input id="seo-title" value={story.seoTitle} onChange={(event) => update("seoTitle", event.target.value)} className={fieldClass} /></div>
+                <div><label htmlFor="seo-description" className={labelClass}>Description</label><textarea id="seo-description" rows={3} value={story.seoDescription} onChange={(event) => update("seoDescription", event.target.value)} className={fieldClass} /></div>
                 <div><label htmlFor="canonical-url" className={labelClass}>Canonical URL</label><input id="canonical-url" type="url" value={story.canonicalUrl} onChange={(event) => update("canonicalUrl", event.target.value)} className={fieldClass} /></div>
               </div>
             </details>

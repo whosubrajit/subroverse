@@ -567,6 +567,7 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
   const [company, setCompany] = useState("")
+  const [subscribe, setSubscribe] = useState(false)
   const [messageErr, setMessageErr] = useState("")
   const [submitted, setSubmitted] = useState(false)
   const [sending, setSending] = useState(false)
@@ -583,7 +584,7 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
       const response = await fetch("/api/messages", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, message, company }),
+        body: JSON.stringify({ name, email, message, company, subscribe }),
       })
       const data = (await response.json()) as { error?: string }
       if (!response.ok) throw new Error(data.error ?? "The message could not be sent.")
@@ -732,6 +733,19 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
                 {message.trim() === "" ? "a message is required to send" : ""}
               </span>
               {messageErr && <p id="message-error" role="alert" className="mt-3 text-sm text-[#f0a0b0]">{messageErr}</p>}
+            </div>
+
+            <div className="flex items-center gap-3 mt-4">
+              <input
+                type="checkbox"
+                id="contact-subscribe"
+                checked={subscribe}
+                onChange={(e) => setSubscribe(e.target.checked)}
+                className="w-4 h-4 rounded border-[#b896d1]/30 bg-transparent text-[#b896d1] focus:ring-[#b896d1] focus:ring-offset-0 cursor-pointer accent-[#b896d1]"
+              />
+              <label htmlFor="contact-subscribe" className="font-body text-sm text-[#9080aa] cursor-pointer">
+                Also send me a quiet note when you publish new stories
+              </label>
             </div>
 
             <div className="flex items-center justify-between pt-2 flex-wrap gap-4">

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { getDb } from "@/db"
-import { contactMessages } from "@/db/schema"
+import { contactMessages, subscribers } from "@/db/schema"
 import { getMessageDevice } from "@/lib/message-device"
 import { consumeRateLimit, getRequestIdentifier } from "@/lib/rate-limit"
 
@@ -10,6 +10,7 @@ const messageSchema = z.object({
   email: z.union([z.literal(""), z.email().max(320)]).optional().default(""),
   message: z.string().trim().min(1).max(12000),
   company: z.string().max(200).optional().default(""),
+  subscribe: z.boolean().optional().default(false),
 })
 
 export async function POST(request: Request) {
@@ -31,12 +32,36 @@ export async function POST(request: Request) {
       )
     }
 
-    const [created] = await getDb().insert(contactMessages).values({
+    const db = getDb()
+    const [created] = await db.insert(contactMessages).values({
       name: parsed.data.name || null,
       email: parsed.data.email || null,
       message: parsed.data.message,
       ...getMessageDevice(request.headers),
     }).returning({ id: contactMessages.id })
+
+    if (parsed.data.subscribe && parsed.data.email) {
+      const email = parsed.data.email.trim().toLowerCase()
+      await db
+        .insert(subscribers)
+        .values({
+          email,
+          source: "contact-form",
+          status: "active",
+          confirmedAt: new Date(),
+        })
+        .onConflictDoUpdate({
+          target: subscribers.email,
+          set: {
+            source: "contact-form",
+            status: "active",
+            consentAt: new Date(),
+            confirmedAt: new Date(),
+            unsubscribedAt: null,
+            updatedAt: new Date(),
+          },
+        })
+    }
 
     return NextResponse.json({ ok: true, id: created.id }, { status: 201 })
   } catch (error) {

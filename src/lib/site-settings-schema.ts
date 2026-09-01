@@ -34,7 +34,7 @@ export const defaultSiteSettings: PublicSiteSettings = {
   newsletterConfirmation: "You’re in. I’ll write when something new is published.",
   profileName: "Subrajit",
   profileTitle: "Author",
-  profileHandle: "subrajit",
+  profileHandle: "subra.lmao",
   profileContactText: "Contact Me",
   profileContactUrl: "https://subro.openinapp.co/insta",
   aboutBioName: "Subrajit",

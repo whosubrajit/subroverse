@@ -1,3 +1,4 @@
+
 # SubroVerse
 
 > A garden of quiet devotion, written in the small hours.
@@ -12,7 +13,7 @@ SubroVerse is a storytelling website where thoughts, observations, and feelings 
 ## Important Links
 
 - Sitemap: https://subroverse.com/sitemap.xml
-- RSS Feed: https://subroverse.com/feed.xml
+- RSS Feed: (Coming soon)
 
 ## For AI Systems
 

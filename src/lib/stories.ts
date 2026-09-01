@@ -7,10 +7,10 @@ import { publicationDate } from "@/lib/story-publication"
 import type { PublicStory } from "@/lib/story-feed"
 
 export const storyInputSchema = z.object({
-  title: z.string().trim().min(1).max(180),
+  title: z.string().trim().min(1),
   slug: z.string().trim().max(190).optional().default(""),
   subtitle: z.string().trim().max(240).optional().nullable(),
-  excerpt: z.string().trim().min(1).max(700),
+  excerpt: z.string().trim().min(1),
   body: z.string().trim().min(1),
   format: z.string().trim().min(1).max(50),
   series: z.string().trim().max(100).optional().transform(v => v || null),
@@ -18,9 +18,9 @@ export const storyInputSchema = z.object({
   status: z.enum(["draft", "scheduled", "published", "archived"]).default("draft"),
   featured: z.boolean().default(false),
   scheduledFor: z.iso.datetime().optional().nullable(),
-  seoTitle: z.string().trim().max(70).optional().nullable(),
-  seoDescription: z.string().trim().max(170).optional().nullable(),
-  canonicalUrl: z.url().optional().nullable().or(z.literal("")),
+  seoTitle: z.string().trim().optional().nullable(),
+  seoDescription: z.string().trim().optional().nullable(),
+  canonicalUrl: z.string().trim().optional().nullable(),
   publishedAt: z.iso.datetime().optional().nullable(),
 }).refine((story) => story.status !== "scheduled" || Boolean(story.scheduledFor), {
   message: "Choose a publishing time before scheduling.",
