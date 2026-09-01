@@ -67,6 +67,7 @@ export const stories = pgTable(
     body: text("body").notNull(),
     format: text("format").notNull().default("Prose"),
     series: text("series"),
+    seriesSlug: text("series_slug"),
     status: storyStatus("status").notNull().default("draft"),
     featured: boolean("featured").notNull().default(false),
     coverImageId: uuid("cover_image_id").references(() => media.id, {
@@ -210,6 +211,18 @@ export const contactMessages = pgTable(
     archivedAt: timestamp("archived_at", { withTimezone: true }),
   },
   (table) => [index("contact_messages_status_idx").on(table.status, table.createdAt)],
+)
+
+export const requestRateLimits = pgTable(
+  "request_rate_limits",
+  {
+    key: text("key").primaryKey(),
+    action: text("action").notNull(),
+    count: integer("count").notNull().default(1),
+    windowStart: timestamp("window_start", { withTimezone: true }).notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index("request_rate_limits_updated_idx").on(table.updatedAt)],
 )
 
 export const siteSettings = pgTable("site_settings", {

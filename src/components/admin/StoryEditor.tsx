@@ -1,44 +1,9 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
-
-type EditorStatus = "draft" | "scheduled" | "published" | "archived"
-
-type EditorStory = {
-  id?: string
-  title: string
-  slug: string
-  subtitle: string
-  excerpt: string
-  body: string
-  format: string
-  series: string
-  status: EditorStatus
-  featured: boolean
-  scheduledFor: string
-  publishedAt: string
-  seoTitle: string
-  seoDescription: string
-  canonicalUrl: string
-}
-
-const blankStory: EditorStory = {
-  title: "",
-  slug: "",
-  subtitle: "",
-  excerpt: "",
-  body: "",
-  format: "Prose",
-  series: "",
-  status: "draft",
-  featured: false,
-  scheduledFor: "",
-  publishedAt: "",
-  seoTitle: "",
-  seoDescription: "",
-  canonicalUrl: "",
-}
+import { blankStory, encodeEditorDraft, normalizeEditorStory, readEditorDraft, saveEditorStory } from "@/lib/story-editor"
+import type { EditorStatus, EditorStory } from "@/lib/story-editor"
 
 const fieldClass = "w-full rounded-xl border border-white/[.07] bg-[#100d19] px-4 py-3 text-sm text-[#eee6f5] outline-none transition-colors placeholder:text-[#4f455a] focus:border-[#b896d1]/60"
 const labelClass = "mb-2 block text-[10px] uppercase tracking-[.18em] text-[#74667f]"
@@ -50,22 +15,38 @@ export default function StoryEditor({ initialStory }: { initialStory?: Partial<E
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle")
   const [error, setError] = useState("")
   const [preview, setPreview] = useState(false)
+  const [ready, setReady] = useState(false)
+  const [pendingDraft, setPendingDraft] = useState<EditorStory | null>(null)
+  const [draftWarning, setDraftWarning] = useState("")
+  const original = useRef(initialStory ?? {})
+  const busy = useRef(false)
+  const finished = useRef(false)
 
   useEffect(() => {
-    if (initialStory?.id) return
-    const cached = window.localStorage.getItem(draftKey)
-    if (cached) {
-      try { setStory({ ...blankStory, ...(JSON.parse(cached) as EditorStory) }) } catch { /* ignore invalid local draft */ }
+    const initial = normalizeEditorStory(original.current)
+    setStory(initial)
+    try {
+      setPendingDraft(readEditorDraft(window.localStorage.getItem(draftKey), initial))
+    } catch {
+      setDraftWarning("This browser cannot store recovery drafts. Save to the database before leaving.")
     }
-  }, [draftKey, initialStory?.id])
+    setReady(true)
+  }, [draftKey])
 
   useEffect(() => {
+    if (!ready || pendingDraft || saveState === "saving" || finished.current) return
     const timer = window.setTimeout(() => {
-      window.localStorage.setItem(draftKey, JSON.stringify(story))
-      if (saveState === "idle") setSaveState("saved")
+      if (busy.current || finished.current) return
+      try {
+        window.localStorage.setItem(draftKey, encodeEditorDraft(story, original.current))
+        setDraftWarning("")
+        if (saveState === "idle") setSaveState("saved")
+      } catch {
+        setDraftWarning("Recovery draft could not be stored. Save to the database before leaving.")
+      }
     }, 700)
     return () => window.clearTimeout(timer)
-  }, [draftKey, saveState, story])
+  }, [draftKey, ready, pendingDraft, saveState, story])
 
   const metrics = useMemo(() => {
     const words = story.body.trim() ? story.body.trim().split(/\s+/).length : 0
@@ -78,6 +59,7 @@ export default function StoryEditor({ initialStory }: { initialStory?: Partial<E
   }
 
   const save = async (status: EditorStatus) => {
+    if (!ready || pendingDraft || busy.current || finished.current) return
     if (!story.title.trim() || !story.excerpt.trim() || !story.body.trim()) {
       setError("Title, excerpt and body are required.")
       return
@@ -89,44 +71,48 @@ export default function StoryEditor({ initialStory }: { initialStory?: Partial<E
 
     setSaveState("saving")
     setError("")
-    const endpoint = story.id ? `/api/admin/stories/${story.id}` : "/api/admin/stories"
-    const response = await fetch(endpoint, {
-      method: story.id ? "PATCH" : "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        ...story,
-        status,
-        scheduledFor: story.scheduledFor ? new Date(story.scheduledFor).toISOString() : null,
-        publishedAt: story.publishedAt ? new Date(story.publishedAt).toISOString() : null,
-      }),
-    })
-    const data = (await response.json()) as { error?: string; story?: { id: string } }
-    if (!response.ok || !data.story) {
+    busy.current = true
+    try {
+      await saveEditorStory(story, original.current, status)
+      finished.current = true
+      try { window.localStorage.removeItem(draftKey) } catch { /* Do not retry an already-saved story because of local storage. */ }
+      setSaveState("saved")
+      router.push("/admin/stories")
+      router.refresh()
+    } catch (cause) {
       setSaveState("error")
-      setError(data.error ?? "The story could not be saved.")
-      return
+      setError(cause instanceof Error ? cause.message : "The story could not be saved. Please try again.")
+    } finally {
+      busy.current = false
     }
-
-    window.localStorage.removeItem(draftKey)
-    setSaveState("saved")
-    router.push("/admin/stories")
-    router.refresh()
   }
+
+  if (!ready) return <p role="status" className="p-8 text-[#a99bb9]">Opening your draft…</p>
 
   return (
     <div className="min-h-screen text-[#f0ebf5]">
       <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-white/[.06] bg-[#0e0b18]/90 px-4 backdrop-blur-xl md:px-8">
         <div className="flex items-center gap-4">
           <button onClick={() => router.push("/admin/stories")} className="grid h-10 w-10 place-items-center rounded-full text-[#8f819f] hover:bg-white/5 hover:text-white" aria-label="Back to stories">←</button>
-          <div><p className="font-cursive text-lg text-[#b896d1]">story studio</p><p className="text-[10px] uppercase tracking-widest text-[#665a73]">{saveState === "saving" ? "saving…" : saveState === "saved" ? "draft preserved" : "editing"}</p></div>
+          <div><p className="font-cursive text-lg text-[#b896d1]">story studio</p><p className="text-[10px] uppercase tracking-widest text-[#665a73]">{saveState === "saving" ? "saving…" : finished.current ? "saved to database" : saveState === "saved" ? "recovery draft on this device" : "editing"}</p></div>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={() => setPreview((value) => !value)} className="min-h-10 rounded-full border border-white/[.08] px-4 text-xs text-[#9e90af] hover:border-[#b896d1]/40">{preview ? "Edit" : "Preview"}</button>
-          <button onClick={() => save("draft")} disabled={saveState === "saving"} className="min-h-10 rounded-full border border-[#b896d1]/25 px-4 text-xs text-[#c7afd9] hover:bg-[#b896d1]/8">Save draft</button>
-          <button onClick={() => save(story.status === "scheduled" ? "scheduled" : "published")} disabled={saveState === "saving"} className="min-h-10 rounded-full bg-[#b896d1] px-5 text-xs text-[#120e1f] hover:bg-[#d6bdf0]">{story.status === "scheduled" ? "Schedule" : "Publish"}</button>
+          <button onClick={() => save("draft")} disabled={saveState === "saving" || !!pendingDraft || finished.current} className="min-h-10 rounded-full border border-[#b896d1]/25 px-4 text-xs text-[#c7afd9] hover:bg-[#b896d1]/8 disabled:opacity-50">Save draft</button>
+          <button onClick={() => save(story.status === "scheduled" ? "scheduled" : "published")} disabled={saveState === "saving" || !!pendingDraft || finished.current} className="min-h-10 rounded-full bg-[#b896d1] px-5 text-xs text-[#120e1f] hover:bg-[#d6bdf0] disabled:opacity-50">{story.status === "scheduled" ? "Schedule" : "Publish"}</button>
         </div>
       </header>
 
+      {pendingDraft && <section aria-label="Draft recovery" className="mx-5 mt-5 rounded-xl border border-[#b896d1]/30 bg-[#151120] p-5 text-sm">
+        <p>A different recovery draft was found on this device. Restore it, or keep the database version shown below.</p>
+        <div className="mt-4 flex gap-4">
+          <button className="rounded-full bg-[#b896d1] px-4 py-2 text-[#120e1f]" onClick={() => { setStory(pendingDraft); setPendingDraft(null); setSaveState("idle") }}>Restore draft</button>
+          <button className="rounded-full border border-white/20 px-4 py-2" onClick={() => { try { window.localStorage.removeItem(draftKey) } catch { /* Autosave will report storage errors. */ } setPendingDraft(null) }}>Discard recovery draft</button>
+        </div>
+      </section>}
+      {draftWarning && <p role="status" className="mx-5 mt-4 text-sm text-amber-200">{draftWarning}</p>}
+      {error && <p role="alert" className="mx-5 mt-4 rounded-xl border border-red-300/15 bg-red-300/5 p-4 text-sm text-[#dc91a4]">{error}</p>}
+      <fieldset disabled={!!pendingDraft || saveState === "saving" || finished.current} className="contents">
       {preview ? (
         <main className="mx-auto max-w-2xl px-6 py-16">
           <p className="font-cursive text-lg text-[#b896d1]">{story.series || story.format}</p>
@@ -168,8 +154,11 @@ export default function StoryEditor({ initialStory }: { initialStory?: Partial<E
               <h2 className="font-display text-xl font-light italic">Organization</h2>
               <div className="mt-5 space-y-4">
                 <div><label htmlFor="story-format" className={labelClass}>Format</label><select id="story-format" value={story.format} onChange={(event) => update("format", event.target.value)} className={fieldClass}>{["Prose", "Poetry", "Letter", "List", "Fragment"].map((item) => <option key={item}>{item}</option>)}</select></div>
-                <div><label htmlFor="story-series" className={labelClass}>Series</label><input id="story-series" value={story.series} onChange={(event) => update("series", event.target.value)} placeholder="Optional" className={fieldClass} /></div>
-                <div><label htmlFor="story-slug" className={labelClass}>URL slug</label><input id="story-slug" value={story.slug} onChange={(event) => update("slug", event.target.value)} placeholder="generated-from-title" className={fieldClass} /></div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><label htmlFor="story-series" className={labelClass}>Series</label><input id="story-series" value={story.series || ""} onChange={(event) => update("series", event.target.value)} placeholder="e.g. Shree" className={fieldClass} /></div>
+                  <div><label htmlFor="story-series-slug" className={labelClass}>Series URL slug</label><input id="story-series-slug" value={story.seriesSlug || ""} onChange={(event) => update("seriesSlug", event.target.value)} placeholder="e.g. shree" className={fieldClass} /></div>
+                </div>
+                <div><label htmlFor="story-slug" className={labelClass}>Story URL slug</label><input id="story-slug" value={story.slug} onChange={(event) => update("slug", event.target.value)} placeholder="generated-from-title" className={fieldClass} /></div>
               </div>
             </section>
 
@@ -182,10 +171,10 @@ export default function StoryEditor({ initialStory }: { initialStory?: Partial<E
               </div>
             </details>
 
-            {error && <p role="alert" className="rounded-xl border border-red-300/15 bg-red-300/5 p-4 text-sm leading-6 text-[#dc91a4]">{error}</p>}
           </aside>
         </main>
       )}
+      </fieldset>
     </div>
   )
 }

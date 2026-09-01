@@ -6,13 +6,6 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["drizzle-orm"],
   },
-  async rewrites() {
-    return [
-      { source: "/about", destination: "/" },
-      { source: "/write", destination: "/" },
-      { source: "/stories", destination: "/" },
-    ]
-  },
 }
 
 export default nextConfig

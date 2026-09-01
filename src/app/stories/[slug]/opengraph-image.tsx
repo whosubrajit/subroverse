@@ -1,9 +1,8 @@
 import { ImageResponse } from "next/og"
-import { and, eq } from "drizzle-orm"
-import { getDb } from "@/db"
-import { stories } from "@/db/schema"
+import { findPublicStory } from "@/lib/stories"
 
-export const runtime = "edge"
+export const runtime = "nodejs"
+export const dynamic = "force-dynamic"
 export const alt = "SubroVerse story"
 export const size = { width: 1200, height: 630 }
 export const contentType = "image/png"
@@ -16,11 +15,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   let series: string | null = null
 
   if (process.env.DATABASE_URL) {
-    const [story] = await getDb()
-      .select({ title: stories.title, format: stories.format, series: stories.series })
-      .from(stories)
-      .where(and(eq(stories.slug, slug), eq(stories.status, "published")))
-      .limit(1)
+    const story = await findPublicStory(slug)
     if (story) {
       title = story.title
       format = story.format

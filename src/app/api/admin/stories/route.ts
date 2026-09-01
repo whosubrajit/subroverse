@@ -25,6 +25,7 @@ export async function POST(request: Request) {
   const input = parsed.data
   const slug = slugify(input.slug || input.title)
   if (!slug) return NextResponse.json({ error: "The story needs a usable slug." }, { status: 400 })
+  const seriesSlug = input.series ? (slugify(input.seriesSlug || input.series) || null) : null
   const metrics = storyMetrics(input.body)
   const now = new Date()
   const scheduledFor = input.scheduledFor ? new Date(input.scheduledFor) : null
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
       .values({
         ...input,
         slug,
+        seriesSlug,
         scheduledFor,
         canonicalUrl: input.canonicalUrl || null,
         publishedAt,

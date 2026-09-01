@@ -5,6 +5,7 @@ import { getDb } from "@/db"
 import { contactMessages, stories, subscribers } from "@/db/schema"
 import { getAdminUser } from "@/lib/admin"
 import { getAdminTrafficReport } from "@/lib/cloudflare-analytics"
+import { pendingStoryCondition, publicStoryCondition } from "@/lib/story-publication"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Writer’s room", robots: { index: false, follow: false } }
@@ -14,10 +15,11 @@ const emptyCounts = { stories: 0, drafts: 0, scheduled: 0, subscribers: 0, messa
 async function loadCounts() {
   if (!process.env.DATABASE_URL) return emptyCounts
   const db = getDb()
+  const now = new Date()
   const [published, drafts, scheduled, audience, messages] = await Promise.all([
-    db.select({ value: count() }).from(stories).where(eq(stories.status, "published")),
+    db.select({ value: count() }).from(stories).where(publicStoryCondition(stories, now)),
     db.select({ value: count() }).from(stories).where(eq(stories.status, "draft")),
-    db.select({ value: count() }).from(stories).where(eq(stories.status, "scheduled")),
+    db.select({ value: count() }).from(stories).where(pendingStoryCondition(stories, now)),
     db.select({ value: count() }).from(subscribers).where(eq(subscribers.status, "active")),
     db.select({ value: count() }).from(contactMessages).where(eq(contactMessages.status, "unread")),
   ])

@@ -8,43 +8,43 @@ import { publicAnalyticsLocation } from "@/lib/analytics-policy"
 import type { PublicSiteSettings } from "@/lib/site-settings-schema"
 import EnvelopeIntro from "@/components/EnvelopeIntro"
 import { shouldShowEntryIntro } from "@/lib/intro-timing"
-import suberoImgAsset from "@/imports/Gemini_Generated_Image_z6obahz6obahz6ob.jpeg"
+import { loadStoryFeed } from "@/lib/story-feed"
+import type { PublicStory } from "@/lib/story-feed"
+import suberoImgAsset from "@/imports/Subroooooooo.jpeg"
 import profileFlowerAsset from "@/imports/Untitled__Logo___7_.png"
 
 const assetUrl = (asset: string | { src: string }) =>
   typeof asset === "string" ? asset : asset.src
 
+// SVG attributes must serialize identically in Node and the browser during hydration.
+// Fixed precision avoids insignificant Math.sin/Math.cos engine differences.
+const radialPoint = (angle: number, centerX: number, centerY: number, radius: number) => {
+  const radians = (angle * Math.PI) / 180
+  return [
+    (centerX + Math.cos(radians) * radius).toFixed(6),
+    (centerY + Math.sin(radians) * radius).toFixed(6),
+  ] as const
+}
+
 const suberoImg = assetUrl(suberoImgAsset)
 
-type Page = "home" | "about" | "write" | "admin" | "stories"
+type Page = "home" | "about" | "write" | "admin" | "stories" | "series" | "series-index"
 
 type Destination =
   | { type: "page"; page: Page }
   | { type: "story"; story: Story }
 
-type Story = {
-  id: number | string
-  slug?: string
-  title: string
-  category: string
-  series?: string
-  date: string
-  readTime: string
-  excerpt: string
-  body: string[]
-  local?: boolean
-}
+type Story = PublicStory
 
 /* ════════════════════════
    REDUCED MOTION HOOK
    ════════════════════════ */
 function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(
-    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-  )
+  const [reduced, setReduced] = useState(false)
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)")
     const handler = (e: MediaQueryListEvent) => setReduced(e.matches)
+    setReduced(mq.matches)
     mq.addEventListener("change", handler)
     return () => mq.removeEventListener("change", handler)
   }, [])
@@ -60,10 +60,10 @@ function FloralDivider() {
       <div className="h-px flex-1 max-w-40 bg-gradient-to-r from-transparent to-[#b896d1]" />
       <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
         {[0, 72, 144, 216, 288].map((a, i) => {
-          const rad = (a * Math.PI) / 180
+          const [x, y] = radialPoint(a, 9, 9, 5)
           return (
-            <ellipse key={i} cx={9 + Math.cos(rad) * 5} cy={9 + Math.sin(rad) * 5} rx="2" ry="3.5"
-              transform={`rotate(${a + 90},${9 + Math.cos(rad) * 5},${9 + Math.sin(rad) * 5})`} fill="#c49ce6" />
+            <ellipse key={i} cx={x} cy={y} rx="2" ry="3.5"
+              transform={`rotate(${a + 90},${x},${y})`} fill="#c49ce6" />
           )
         })}
         <circle cx="9" cy="9" r="1.5" fill="#fde8b0" />
@@ -80,10 +80,10 @@ function FooterFlower() {
   return (
     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" opacity="0.4" aria-hidden="true">
       {[0, 72, 144, 216, 288].map((a, i) => {
-        const rad = (a * Math.PI) / 180
+        const [x, y] = radialPoint(a, 9, 9, 5)
         return (
-          <ellipse key={i} cx={9 + Math.cos(rad) * 5} cy={9 + Math.sin(rad) * 5} rx="2" ry="3.5"
-            transform={`rotate(${a + 90},${9 + Math.cos(rad) * 5},${9 + Math.sin(rad) * 5})`} fill="#c49ce6" />
+          <ellipse key={i} cx={x} cy={y} rx="2" ry="3.5"
+            transform={`rotate(${a + 90},${x},${y})`} fill="#c49ce6" />
         )
       })}
       <circle cx="9" cy="9" r="1.5" fill="#fde8b0" />
@@ -140,13 +140,17 @@ function Nav({
           minHeight: "64px",
         }}
       >
-        <button
-          onClick={() => onBrand ? onBrand() : onNavigate("home")}
+        <a
+          href="/"
+          onClick={(event) => {
+            event.preventDefault()
+            onBrand ? onBrand() : onNavigate("home")
+          }}
           aria-label="Replay welcome and go home"
           className={`font-cursive text-[#b896d1] text-xl hover:opacity-70 transition-opacity min-h-[44px] flex items-center ${focusRing}`}
         >
           subroverse
-        </button>
+        </a>
         <div className="flex items-center gap-6 sm:gap-8">
           {onBack && (
             <button
@@ -193,89 +197,41 @@ function Nav({
 }
 
 /* ════════════════════════
-   DATA
-   ════════════════════════ */
-const stories: Story[] = [
-  {
-    id: 1,
-    title: "The Way She Holds the Morning",
-    category: "Prose",
-    date: "August 12, 2026",
-    readTime: "6 min",
-    excerpt:
-      "She wakes before the light does. I have never told her that I know this — that I have memorized the exact shade of gray the sky turns when she opens the window, as if the world is still rehearsing for her.",
-    body: [
-      "She wakes before the light does. I have never told her that I know this — that I have memorized the exact shade of gray the sky turns when she opens the window, as if the world is still rehearsing for her.",
-      "There is a ritual she has with tea. Two sugars, never one, never three. She stirs it counterclockwise, which I have never asked about and never will, because some things are perfect only when they remain unexplained.",
-      "I keep a list, somewhere inside the architecture of my chest, of all the small things she does that no poem has yet named. The way she laughs a second time at a joke she has already laughed at. The way she touches the spines of books before she buys them, as though choosing a friend rather than a story.",
-      "If I am honest — and here, in this small and private place, I try to be — it is not her beauty that undoes me. It is her particularity. The irreducible fact of her, exact and unrepeatable as a fingerprint, as a season, as a name whispered in a language no one else has spoken.",
-      "The morning asks nothing of her. That is the arrangement they have. And I have made the same agreement: to simply be near, and to be glad.",
-    ],
-  },
-  {
-    id: 2,
-    title: "I Learned Your Name from the Rain",
-    category: "Poetry",
-    date: "July 29, 2026",
-    readTime: "4 min",
-    excerpt:
-      "The first time I heard it — your name — it was a Tuesday and the gutters were full and someone was saying it across a crowded room of strangers who did not understand what had just happened to me.",
-    body: [
-      "The first time I heard it — your name, I mean — it was a Tuesday and the gutters were full and someone was saying it across a room crowded with strangers who did not understand what had just happened to me.",
-      "A name is a small violence, when you love someone. It is the only word that means exactly them and nothing else in the world, and every time you hear it, the whole person comes flooding in.",
-      "I have said yours in empty rooms. I have let it sit on my tongue like a coin, like a stone worn smooth by a river that has been going somewhere patient for a thousand years.",
-      "Teach me to say it the way you say it. With that particular breath before the first syllable. With that absence of hesitation, that certainty, that you.",
-    ],
-  },
-  {
-    id: 3,
-    title: "Everything She Left in the Room",
-    category: "Prose",
-    date: "July 5, 2026",
-    readTime: "5 min",
-    excerpt:
-      "A half-read book, face-down and splayed. A glass of water. Her handwriting on a corner of paper that said only: don't forget.",
-    body: [
-      "A half-read book, face-down and splayed, its spine bent in a way that suggested urgency. A glass of water. Her handwriting on a corner of paper that said only: don't forget.",
-      "I stood in the doorway longer than I needed to. The room had been shaped by her presence the way rooms are: the light falling differently on her side of things, the air carrying something I could not name except by the fact of missing it.",
-      "She had left, as she always left, without saying goodbye, because she believed goodbyes were theater and departures were simply a pause in the conversation.",
-      "I kept the piece of paper. I don't know what she was reminding herself not to forget. I have decided it was everything.",
-    ],
-  },
-  {
-    id: 4,
-    title: "Seventeen Observations on Watching Her Sleep",
-    category: "List",
-    date: "June 18, 2026",
-    readTime: "3 min",
-    excerpt:
-      "One: she does not look peaceful, exactly. Peaceful implies stillness, and she is never still — even now there is some argument happening behind her eyelids.",
-    body: [
-      "One: she does not look peaceful, exactly. Peaceful implies stillness, and she is never still — even now there is some argument happening behind her eyelids, some country she is navigating.",
-      "Two: her breathing has a tempo. I have tried to match it and never succeeded.",
-      "Three: she keeps one hand open and one hand closed. I have not solved this asymmetry.",
-      "Four: the light from the window falls across her like a decision.",
-      "Five: I am so in love with her it has become structural. Load-bearing. I would need to be rebuilt from the foundation to stop.",
-      "Seventeen: she will wake and the room will reorganize itself around her, and I will pretend I have not been watching, and she will pretend she does not know, and this is the most tender lie we tell.",
-    ],
-  },
-]
-
-/* ════════════════════════
    STORY READER
    ════════════════════════ */
 function StoryView({
   story,
+  allStories,
   onBack,
   onNavigate,
+  onOpenStory,
   onBrand,
+  isSeriesContext,
 }: {
   story: Story
+  allStories: Story[]
   onBack: () => void
   onNavigate: (p: Page) => void
+  onOpenStory: (s: Story) => void
   onBrand: () => void
+  isSeriesContext?: boolean
 }) {
   const reduced = useReducedMotion()
+
+  // Sort stories by date to match Archive order (newest first)
+  const sortedStories = [...allStories].sort((a, b) => {
+    const da = new Date(a.date).getTime()
+    const db = new Date(b.date).getTime()
+    if (isNaN(da) && isNaN(db)) return 0
+    if (isNaN(da)) return 1
+    if (isNaN(db)) return -1
+    return db - da
+  })
+
+  const currentIndex = sortedStories.findIndex(s => s.id === story.id)
+  const nextStory = sortedStories[currentIndex - 1] // Newer
+  const prevStory = sortedStories[currentIndex + 1] // Older
+
   return (
     <div
       className="min-h-screen"
@@ -283,9 +239,27 @@ function StoryView({
     >
       <Nav page="home" onNavigate={onNavigate} onBack={onBack} onBrand={onBrand} />
       <main className="max-w-2xl mx-auto px-6 pt-12 pb-32">
-        <span className="font-cursive text-[#b896d1] text-sm opacity-70">
-          {story.category}{story.series ? ` · ${story.series}` : ""}
-        </span>
+        <p className="font-cursive text-sm text-[#b896d1] opacity-70">
+          {story.category}
+          {story.series && story.seriesSlug ? (
+            <>
+              {" · "}
+              <a
+                href={`/series/${story.seriesSlug}`}
+                className="hover:underline cursor-pointer"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const slug = story.seriesSlug
+                  window.history.pushState(null, "", `/series/${slug}`);
+                  window.dispatchEvent(new Event('popstate'));
+                }}
+              >
+                {story.series}
+              </a>
+            </>
+          ) : ""}
+        </p>
         <h1 className="font-display font-light italic text-4xl md:text-5xl text-[#f0ebf5] mt-3 mb-4 leading-tight">
           {story.title}
         </h1>
@@ -307,15 +281,42 @@ function StoryView({
         )}
 
         <FloralDivider />
-        <p className="font-cursive text-center text-[#b896d1] text-xl opacity-50">
+        <p className="font-cursive text-center text-[#b896d1] text-xl opacity-50 mb-12">
           — written with love
         </p>
+
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-6 mb-12">
+          <div className="flex-1 text-center sm:text-left">
+            {nextStory && (
+              <a
+                href={`/stories/${nextStory.slug}`}
+                onClick={(e) => { e.preventDefault(); onOpenStory(nextStory) }}
+                className="group block"
+              >
+                <p className="font-display italic text-2xl text-[#9e90af] group-hover:text-[#b896d1] transition-colors">← {nextStory.title}</p>
+              </a>
+            )}
+          </div>
+
+          <div className="flex-1 text-center sm:text-right">
+            {prevStory && (
+              <a
+                href={`/stories/${prevStory.slug}`}
+                onClick={(e) => { e.preventDefault(); onOpenStory(prevStory) }}
+                className="group block"
+              >
+                <p className="font-display italic text-2xl text-[#9e90af] group-hover:text-[#b896d1] transition-colors">{prevStory.title} →</p>
+              </a>
+            )}
+          </div>
+        </div>
+
         <div className="mt-12 text-center">
           <button
             onClick={onBack}
             className={`font-body text-xs text-[#9e90af] hover:text-[#b896d1] transition-colors tracking-widest uppercase min-h-[44px] inline-flex items-center ${focusRing}`}
           >
-            ← back to stories
+            ← back to {isSeriesContext ? "series" : "stories"}
           </button>
         </div>
       </main>
@@ -335,18 +336,19 @@ function StoryCard({
   onClick: () => void
 }) {
   return (
-    <article
-      onClick={onClick}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
+    <a
+      href={story.slug ? `/stories/${story.slug}` : `/stories/${encodeURIComponent(String(story.id))}`}
+      onClick={(event) => {
+        event.preventDefault()
+        onClick()
+      }}
       aria-label={`Read story: ${story.title}`}
-      className={`group cursor-pointer border-b border-[rgba(184,150,209,0.1)] py-8 hover:border-[rgba(184,150,209,0.3)] transition-all duration-300 ${focusRing}`}
+      className={`group block cursor-pointer border-b border-[rgba(184,150,209,0.1)] py-8 hover:border-[rgba(184,150,209,0.3)] transition-all duration-300 ${focusRing}`}
     >
       <div className="flex items-start justify-between gap-6">
         <div className="flex-1">
           <span className="font-cursive text-[#b896d1] text-sm opacity-70 mb-2 block">
-            {story.category}{story.series ? ` · ${story.series}` : ""}
+            {story.category}{story.series && story.seriesSlug ? ` · ${story.series}` : ""}
           </span>
           <h3 className="font-display font-light italic text-2xl text-[#f0ebf5] leading-tight mb-3 group-hover:text-[#d6bdf0] transition-colors">
             {story.title}
@@ -364,7 +366,7 @@ function StoryCard({
           </span>
         </div>
       </div>
-    </article>
+    </a>
   )
 }
 
@@ -420,12 +422,12 @@ function BotanicalMonogram() {
       {[80, 128].map((x, i) => (
         <g key={i}>
           {[0, 72, 144, 216, 288].map((a, j) => {
-            const rad = (a * Math.PI) / 180
+            const [petalX, petalY] = radialPoint(a, x, 30, 6)
             return (
               <ellipse key={j}
-                cx={x + Math.cos(rad) * 6} cy={30 + Math.sin(rad) * 6}
+                cx={petalX} cy={petalY}
                 rx="2" ry="3.5"
-                transform={`rotate(${a + 90},${x + Math.cos(rad) * 6},${30 + Math.sin(rad) * 6})`}
+                transform={`rotate(${a + 90},${petalX},${petalY})`}
                 fill="#c49ce6" opacity="0.3"
               />
             )
@@ -535,15 +537,15 @@ function AboutPage({ onNavigate, onBrand, settings }: { onNavigate: (p: Page) =>
             opacity="0.4"
           >
             {[0, 72, 144, 216, 288].map((a, i) => {
-              const rad = (a * Math.PI) / 180
+              const [x, y] = radialPoint(a, 9, 9, 5)
               return (
                 <ellipse
                   key={i}
-                  cx={9 + Math.cos(rad) * 5}
-                  cy={9 + Math.sin(rad) * 5}
+                  cx={x}
+                  cy={y}
                   rx="2"
                   ry="3.5"
-                  transform={`rotate(${a + 90},${9 + Math.cos(rad) * 5},${9 + Math.sin(rad) * 5})`}
+                  transform={`rotate(${a + 90},${x},${y})`}
                   fill="#c49ce6"
                 />
               )
@@ -564,6 +566,7 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
+  const [company, setCompany] = useState("")
   const [messageErr, setMessageErr] = useState("")
   const [submitted, setSubmitted] = useState(false)
   const [sending, setSending] = useState(false)
@@ -580,7 +583,7 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
       const response = await fetch("/api/messages", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ name, email, message }),
+        body: JSON.stringify({ name, email, message, company }),
       })
       const data = (await response.json()) as { error?: string }
       if (!response.ok) throw new Error(data.error ?? "The message could not be sent.")
@@ -630,12 +633,12 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
               aria-hidden="true"
             >
               {[0, 72, 144, 216, 288].map((a, i) => {
-                const rad = (a * Math.PI) / 180
+                const [x, y] = radialPoint(a, 24, 24, 13)
                 return (
                   <ellipse key={i}
-                    cx={24 + Math.cos(rad) * 13} cy={24 + Math.sin(rad) * 13}
+                    cx={x} cy={y}
                     rx="4.5" ry="7.5"
-                    transform={`rotate(${a + 90},${24 + Math.cos(rad) * 13},${24 + Math.sin(rad) * 13})`}
+                    transform={`rotate(${a + 90},${x},${y})`}
                     fill="#c49ce6"
                   />
                 )
@@ -657,6 +660,7 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
                 setName("")
                 setEmail("")
                 setMessage("")
+                setCompany("")
               }}
               className="mt-10 font-body text-xs text-[#8474a0] hover:text-[#b896d1] transition-colors tracking-widest uppercase"
             >
@@ -665,6 +669,18 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-10" noValidate>
+            <div className="pointer-events-none absolute left-[-10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+              <label htmlFor="contact-company">Company website</label>
+              <input
+                id="contact-company"
+                name="company"
+                type="text"
+                value={company}
+                onChange={(event) => setCompany(event.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+              />
+            </div>
             <div>
               <label htmlFor="contact-name" className="font-body text-xs text-[#8474a0] tracking-widest uppercase block mb-2">
                 your name
@@ -709,11 +725,13 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
                 rows={7}
                 aria-required="true"
                 aria-describedby={messageErr ? "message-error" : undefined}
+                aria-invalid={Boolean(messageErr)}
                 className={`${inputClass} resize-none ${messageErr ? "border-[rgba(240,100,120,0.6)]" : ""}`}
               />
               <span id="contact-msg-hint" className="font-body text-xs text-[#8474a0] mt-1 block" aria-live="polite">
                 {message.trim() === "" ? "a message is required to send" : ""}
               </span>
+              {messageErr && <p id="message-error" role="alert" className="mt-3 text-sm text-[#f0a0b0]">{messageErr}</p>}
             </div>
 
             <div className="flex items-center justify-between pt-2 flex-wrap gap-4">
@@ -748,15 +766,15 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
             opacity="0.4"
           >
             {[0, 72, 144, 216, 288].map((a, i) => {
-              const rad = (a * Math.PI) / 180
+              const [x, y] = radialPoint(a, 9, 9, 5)
               return (
                 <ellipse
                   key={i}
-                  cx={9 + Math.cos(rad) * 5}
-                  cy={9 + Math.sin(rad) * 5}
+                  cx={x}
+                  cy={y}
                   rx="2"
                   ry="3.5"
-                  transform={`rotate(${a + 90},${9 + Math.cos(rad) * 5},${9 + Math.sin(rad) * 5})`}
+                  transform={`rotate(${a + 90},${x},${y})`}
                   fill="#c49ce6"
                 />
               )
@@ -770,42 +788,6 @@ function WriteToMePage({ onNavigate, onBrand }: { onNavigate: (p: Page) => void;
 }
 
 /* ════════════════════════
-   LOCAL STORIES HOOK
-   ════════════════════════ */
-const LS_KEY = "suberoverse_stories"
-
-function useLocalStories() {
-  const [localStories, setLocalStories] = useState<Story[]>(() => {
-    if (typeof window === "undefined") return []
-    try {
-      return JSON.parse(localStorage.getItem(LS_KEY) ?? "[]")
-    } catch {
-      return []
-    }
-  })
-
-  const save = (updated: Story[]) => {
-    setLocalStories(updated)
-    localStorage.setItem(LS_KEY, JSON.stringify(updated))
-  }
-
-  const addStory = (s: Omit<Story, "id" | "local">) => {
-    const next: Story = { ...s, id: Date.now(), local: true }
-    save([next, ...localStories])
-  }
-
-  const updateStory = (updated: Story) => {
-    save(localStories.map((s) => (s.id === updated.id ? updated : s)))
-  }
-
-  const deleteStory = (id: Story["id"]) => {
-    save(localStories.filter((s) => s.id !== id))
-  }
-
-  return { localStories, addStory, updateStory, deleteStory }
-}
-
-/* ════════════════════════
    STORIES ARCHIVE PAGE
    ════════════════════════ */
 function StoriesArchivePage({
@@ -813,15 +795,21 @@ function StoriesArchivePage({
   onNavigate,
   onOpenStory,
   onBrand,
+  seriesFilter,
 }: {
   allStories: Story[]
-  onNavigate: (p: Page) => void
+  onNavigate: (p: Page, skipAnimation?: boolean) => void
   onOpenStory: (s: Story) => void
   onBrand: () => void
+  seriesFilter?: string
 }) {
   const reduced = useReducedMotion()
 
-  const sorted = [...allStories].sort((a, b) => {
+  const filtered = seriesFilter
+    ? allStories.filter(s => s.series === seriesFilter)
+    : allStories
+
+  const sorted = [...filtered].sort((a, b) => {
     const da = new Date(a.date).getTime()
     const db = new Date(b.date).getTime()
     if (isNaN(da) && isNaN(db)) return 0
@@ -840,17 +828,19 @@ function StoriesArchivePage({
       <main className="max-w-3xl mx-auto px-6 pt-14 pb-32">
         <div className="mb-4">
           <button
-            onClick={() => onNavigate("home")}
+            onClick={() => seriesFilter ? onNavigate("series-index", true) : onNavigate("home")}
             className={`font-body text-xs text-[#9080aa] hover:text-[#b896d1] transition-colors tracking-widest uppercase min-h-[44px] inline-flex items-center ${focusRing}`}
           >
-            ← back to home
+            ← back to {seriesFilter ? "series" : "home"}
           </button>
         </div>
 
         <div className="mb-10">
-          <p className="font-cursive text-[#b896d1] text-base opacity-70 mb-2">every word written</p>
+          <p className="font-cursive text-[#b896d1] text-base opacity-70 mb-2">
+            {seriesFilter ? "collection" : "every word written"}
+          </p>
           <h1 className="font-display font-light italic text-4xl md:text-5xl text-[#f0ebf5] leading-tight">
-            All stories
+            {seriesFilter ? seriesFilter : "All stories"}
           </h1>
           <p className="font-body text-sm text-[#8474a0] mt-3">
             {sorted.length} {sorted.length === 1 ? "piece" : "pieces"} · newest first
@@ -881,9 +871,119 @@ function StoriesArchivePage({
 }
 
 /* ════════════════════════
+   SERIES INDEX PAGE
+   ════════════════════════ */
+function SeriesIndexPage({
+  allStories,
+  onNavigate,
+  onBrand,
+}: {
+  allStories: Story[]
+  onNavigate: (p: Page) => void
+  onBrand: () => void
+}) {
+  const reduced = useReducedMotion()
+
+  // Group stories by series
+  const seriesMap = new Map<string, { count: number, latestDate: Date, name: string, slug: string }>()
+  for (const s of allStories) {
+    if (s.series && s.seriesSlug) {
+      const existing = seriesMap.get(s.series.toLowerCase())
+      const date = new Date(s.date)
+      if (!existing) {
+        seriesMap.set(s.series.toLowerCase(), {
+          count: 1,
+          latestDate: date,
+          name: s.series,
+          slug: s.seriesSlug
+        })
+      } else {
+        existing.count++
+        if (date > existing.latestDate) {
+          existing.latestDate = date
+        }
+        if (s.seriesSlug) {
+          existing.slug = s.seriesSlug
+        }
+      }
+    }
+  }
+
+  // Sort series by most recently updated
+  const sortedSeries = Array.from(seriesMap.values()).sort((a, b) => {
+    return b.latestDate.getTime() - a.latestDate.getTime()
+  })
+
+  return (
+    <div
+      className="min-h-screen text-[#f0ebf5] overflow-x-hidden"
+      style={{ animation: reduced ? "none" : "fadeUp 0.6s ease-out forwards" }}
+    >
+      <Nav page="stories" onNavigate={onNavigate} onBrand={onBrand} />
+
+      <main className="max-w-3xl mx-auto px-6 pt-14 pb-32">
+        <div className="mb-4">
+          <button
+            onClick={() => onNavigate("home")}
+            className={`font-body text-xs text-[#9080aa] hover:text-[#b896d1] transition-colors tracking-widest uppercase min-h-[44px] inline-flex items-center ${focusRing}`}
+          >
+            ← back to home
+          </button>
+        </div>
+
+        <div className="mb-10">
+          <p className="font-cursive text-[#b896d1] text-base opacity-70 mb-2">collections</p>
+          <h1 className="font-display font-light italic text-4xl md:text-5xl text-[#f0ebf5] leading-tight">
+            Browse by series
+          </h1>
+          <p className="font-body text-sm text-[#8474a0] mt-3">
+            {sortedSeries.length} {sortedSeries.length === 1 ? "series" : "series"}
+          </p>
+        </div>
+
+        <FloralDivider />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mt-12 mb-12">
+          {sortedSeries.map((series) => {
+            return (
+              <a
+                key={series.name}
+                href={`/series/${series.slug}`}
+                onClick={(e) => {
+                  e.preventDefault()
+                  window.history.pushState(null, "", `/series/${series.slug}`)
+                  window.dispatchEvent(new Event('popstate'))
+                }}
+                className={`group block bg-[#1a1528] border border-[rgba(184,150,209,0.13)] hover:border-[rgba(184,150,209,0.35)] rounded-2xl p-8 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(184,150,209,0.07)] relative overflow-hidden ${focusRing}`}
+              >
+                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[rgba(184,150,209,0.03)] to-transparent pointer-events-none" />
+                <h2 className="font-display italic text-2xl text-[#f0ebf5] mb-2">{series.name}</h2>
+                <p className="font-body text-sm text-[#8474a0]">
+                  {series.count} {series.count === 1 ? "story" : "stories"}
+                </p>
+                <p className="font-body text-xs text-[#b896d1] mt-6 uppercase tracking-widest group-hover:text-[#f0ebf5] transition-colors">
+                  Read collection →
+                </p>
+              </a>
+            )
+          })}
+        </div>
+
+        <FloralDivider />
+        <p className="font-cursive text-center text-[#b896d1] text-xl opacity-40">
+          — written with love
+        </p>
+      </main>
+
+      <SiteFooter />
+    </div>
+  )
+}
+
+/* ════════════════════════
    APP — hash-based routing
    ════════════════════════ */
-function parseLocation(allStories: Story[]): { page: Page; storyId: Story["id"] | null } {
+function parseLocation(allStories: Story[]): { page: Page; storyId: Story["id"] | null; seriesName?: string } {
   if (typeof window === "undefined") return { page: "home", storyId: null }
   const h = window.location.hash
   const p = window.location.pathname
@@ -894,6 +994,21 @@ function parseLocation(allStories: Story[]): { page: Page; storyId: Story["id"] 
   if (p === "/about" || h === "#about") return { page: "about", storyId: null }
   if (p === "/write" || h === "#write") return { page: "write", storyId: null }
   if (p === "/stories" || h === "#stories") return { page: "stories", storyId: null }
+  if (p === "/series" || h === "#series") return { page: "series-index", storyId: null }
+
+  // Match /series/:slug
+  const seriesMatch = p.match(/^\/series\/(.+)$/)
+  if (seriesMatch) {
+    const slug = seriesMatch[1]
+    const decodedSlug = decodeURIComponent(slug).replace(/-/g, " ")
+    // Try to find the exact capitalization from stories, otherwise use title case
+    const story = allStories.find(s =>
+      (s.seriesSlug && s.seriesSlug.toLowerCase() === slug.toLowerCase()) ||
+      (s.series && s.series.toLowerCase() === decodedSlug.toLowerCase())
+    )
+    const seriesName = story?.series ?? decodedSlug.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
+    return { page: "series", storyId: null, seriesName }
+  }
   // Match /stories/:slug
   const storyMatch = p.match(/^\/stories\/(.+)$/)
   if (storyMatch) {
@@ -913,50 +1028,71 @@ function parseLocation(allStories: Story[]): { page: Page; storyId: Story["id"] 
   return { page: "home", storyId: null }
 }
 
-export default function App({ settings }: { settings: PublicSiteSettings }) {
+export default function App({
+  settings,
+  initialStories,
+  initialPage = "home",
+  initialSeries = null,
+}: {
+  settings: PublicSiteSettings
+  initialStories?: PublicStory[]
+  initialPage?: string
+  initialSeries?: string | null
+}) {
   const reduced = useReducedMotion()
-  const { localStories } = useLocalStories()
-  const [databaseStories, setDatabaseStories] = useState<Story[] | null>(null)
-  useEffect(() => {
-    let cancelled = false
-    fetch("/api/stories")
-      .then((response) => response.json())
-      .then((data: { configured?: boolean; stories?: Story[] }) => {
-        if (!cancelled) setDatabaseStories(data.configured && data.stories?.length ? data.stories : null)
-      })
-      .catch(() => { if (!cancelled) setDatabaseStories(null) })
-    return () => { cancelled = true }
-  }, [])
-  const allStories: Story[] = databaseStories ?? [...localStories, ...stories]
-
-  const [page, setPage] = useState<Page>(() => parseLocation(allStories).page)
-  const [activeStoryId, setActiveStoryId] = useState<Story["id"] | null>(() => parseLocation(allStories).storyId)
-
-  const [introVisible, setIntroVisible] = useState(() =>
-    shouldShowEntryIntro(typeof window === "undefined" ? "" : window.location.hash),
+  const [page, setPage] = useState<Page>(initialPage as Page)
+  const [currentSeries, setCurrentSeries] = useState<string | null>(initialSeries)
+  const [allStories, setAllStories] = useState<Story[]>(initialStories ?? [])
+  const [feedStatus, setFeedStatus] = useState<"loading" | "ready" | "error">(
+    initialStories === undefined ? "loading" : "ready",
   )
+  const [feedAttempt, setFeedAttempt] = useState(0)
+  useEffect(() => {
+    if (initialStories !== undefined && feedAttempt === 0) return
+    let cancelled = false
+    setFeedStatus("loading")
+    loadStoryFeed()
+      .then((data) => {
+        if (!cancelled) { setAllStories(data); setFeedStatus("ready") }
+      })
+      .catch(() => { if (!cancelled) setFeedStatus("error") })
+    return () => { cancelled = true }
+  }, [feedAttempt, initialStories])
+
+  const [activeStoryId, setActiveStoryId] = useState<Story["id"] | null>(null)
+
+  useEffect(() => {
+    const handleLocationChange = () => {
+      const loc = parseLocation(allStories)
+      setPage(loc.page)
+      setActiveStoryId(loc.storyId)
+      if (loc.seriesName) {
+        setCurrentSeries(loc.seriesName)
+      }
+    }
+    handleLocationChange()
+    window.addEventListener("popstate", handleLocationChange)
+    return () => window.removeEventListener("popstate", handleLocationChange)
+  }, [allStories])
+
+  const [introVisible, setIntroVisible] = useState(() => shouldShowEntryIntro(""))
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   const [introKey, setIntroKey] = useState(0)
-  // "full" on first mount only; every internal navigation switches to "compact"
+  // "full" on first mount from outside; internal navigations start with "compact"
   const [introMode, setIntroMode] = useState<"full" | "compact">("full")
+  
+  useEffect(() => {
+    // If the user came from another page on our site, or they've already visited in this session, skip the full intro.
+    if (document.referrer.startsWith(window.location.origin) || sessionStorage.getItem("subroverse_visited")) {
+      setIntroMode("compact")
+    }
+    sessionStorage.setItem("subroverse_visited", "1")
+  }, [])
   const replayingRef = useRef(false)
   const pendingDestRef = useRef<Destination | null>(null)
 
   const activeStory = activeStoryId != null ? allStories.find(s => String(s.id) === String(activeStoryId)) ?? null : null
-
-  const syncFromLocation = useCallback(() => {
-    const { page: p, storyId } = parseLocation(allStories)
-    setPage(p)
-    setActiveStoryId(storyId)
-  }, [allStories])
-
-  useEffect(() => {
-    window.addEventListener("popstate", syncFromLocation)
-    window.addEventListener("hashchange", syncFromLocation)
-    return () => {
-      window.removeEventListener("popstate", syncFromLocation)
-      window.removeEventListener("hashchange", syncFromLocation)
-    }
-  }, [syncFromLocation])
 
   useEffect(() => {
     let tag = document.querySelector<HTMLMetaElement>('meta[name="robots"][data-admin]')
@@ -974,7 +1110,7 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
   }, [page])
 
   const PAGE_HASH: Record<Page, string> = {
-    home: "/", about: "/about", write: "/write", admin: "/admin", stories: "/stories",
+    home: "/", about: "/about", write: "/write", admin: "/admin", stories: "/stories", series: "/stories", "series-index": "/series"
   }
 
   // Story reading is immediate; main-page navigation keeps the compact envelope.
@@ -1019,18 +1155,39 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
       }
       setActiveStoryId(null)
       setPage(p)
-      window.history.pushState(null, "", PAGE_HASH[p])
+      let url = PAGE_HASH[p]
+      if (p === "series" && currentSeries) {
+        const story = allStories.find(s => s.series === currentSeries && s.seriesSlug)
+        if (story?.seriesSlug) {
+          url = `/series/${story.seriesSlug}`
+        }
+      }
+      window.history.pushState(null, "", url)
     }
 
     window.scrollTo(0, 0)
     setIntroVisible(false)
     replayingRef.current = false
-    // PAGE_HASH is a stable constant defined each render but with the same values
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [allStories, currentSeries])
 
-  // Convenience wrappers that preserve the existing prop interfaces
-  const navigate = useCallback((p: Page) => navigateWithWelcome({ type: "page", page: p }), [navigateWithWelcome])
+  // Convenience wrappers
+  const navigate = useCallback((p: Page, skipAnimation?: boolean) => {
+    if (skipAnimation) {
+      setActiveStoryId(null)
+      setPage(p)
+      let url = PAGE_HASH[p]
+      if (p === "series" && currentSeries) {
+        const story = allStories.find(s => s.series === currentSeries && s.seriesSlug)
+        if (story?.seriesSlug) {
+          url = `/series/${story.seriesSlug}`
+        }
+      }
+      window.history.pushState(null, "", url)
+      window.scrollTo(0, 0)
+    } else {
+      navigateWithWelcome({ type: "page", page: p })
+    }
+  }, [navigateWithWelcome, allStories, currentSeries])
   const openStory = useCallback((story: Story) => navigateWithWelcome({ type: "story", story }), [navigateWithWelcome])
   const closeStory = useCallback(() => navigateWithWelcome({ type: "page", page }), [navigateWithWelcome, page])
   const replayWelcomeAndGoHome = useCallback(() => navigateWithWelcome({ type: "page", page: "home" }), [navigateWithWelcome])
@@ -1041,9 +1198,12 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
     pageContent = (
       <StoryView
         story={activeStory}
+        allStories={allStories}
         onBack={closeStory}
         onNavigate={navigate}
+        onOpenStory={openStory}
         onBrand={replayWelcomeAndGoHome}
+        isSeriesContext={page === "series"}
       />
     )
   } else if (page === "about") {
@@ -1056,6 +1216,24 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
         allStories={allStories}
         onNavigate={navigate}
         onOpenStory={openStory}
+        onBrand={replayWelcomeAndGoHome}
+      />
+    )
+  } else if (page === "series") {
+    pageContent = (
+      <StoriesArchivePage
+        allStories={allStories}
+        onNavigate={navigate}
+        onOpenStory={openStory}
+        onBrand={replayWelcomeAndGoHome}
+        seriesFilter={currentSeries ?? undefined}
+      />
+    )
+  } else if (page === "series-index") {
+    pageContent = (
+      <SeriesIndexPage
+        allStories={allStories}
+        onNavigate={navigate}
         onBrand={replayWelcomeAndGoHome}
       />
     )
@@ -1087,11 +1265,15 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
         </section>
 
         {/* ── FEATURED ── */}
-        <section className="max-w-3xl mx-auto px-6 pb-8">
-          <button
-            onClick={() => openStory(allStories[0])}
+        {allStories[0] && <section className="max-w-3xl mx-auto px-6 pb-8">
+          <a
+            href={allStories[0].slug ? `/stories/${allStories[0].slug}` : `/stories/${encodeURIComponent(String(allStories[0].id))}`}
+            onClick={(event) => {
+              event.preventDefault()
+              openStory(allStories[0])
+            }}
             aria-label={`Read featured story: ${allStories[0].title}`}
-            className={`group w-full text-left bg-[#1a1528] border border-[rgba(184,150,209,0.13)] hover:border-[rgba(184,150,209,0.35)] rounded-2xl p-8 md:p-12 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(184,150,209,0.07)] relative overflow-hidden ${focusRing}`}
+            className={`group block w-full text-left bg-[#1a1528] border border-[rgba(184,150,209,0.13)] hover:border-[rgba(184,150,209,0.35)] rounded-2xl p-8 md:p-12 transition-all duration-500 hover:shadow-[0_20px_60px_rgba(184,150,209,0.07)] relative overflow-hidden ${focusRing}`}
             style={{ animation: reduced ? "none" : undefined }}
           >
             <svg
@@ -1100,12 +1282,12 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
               aria-hidden="true"
             >
               {[0, 72, 144, 216, 288].map((a, i) => {
-                const rad = (a * Math.PI) / 180
+                const [x, y] = radialPoint(a, 24, 24, 14)
                 return (
                   <ellipse key={i}
-                    cx={24 + Math.cos(rad) * 14} cy={24 + Math.sin(rad) * 14}
+                    cx={x} cy={y}
                     rx="5" ry="9"
-                    transform={`rotate(${a + 90},${24 + Math.cos(rad) * 14},${24 + Math.sin(rad) * 14})`}
+                    transform={`rotate(${a + 90},${x},${y})`}
                     fill="#c49ce6"
                   />
                 )
@@ -1130,10 +1312,10 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
                 read the story →
               </span>
             </div>
-          </button>
-        </section>
+          </a>
+        </section>}
 
-        {/* ── ALL STORIES (homepage preview — always exactly 3) ── */}
+        {/* ── ALL STORIES (homepage preview) ── */}
         <section className="max-w-3xl mx-auto px-6 py-16" aria-label="Recent stories">
           <FloralDivider />
           <div className="mb-10">
@@ -1147,13 +1329,21 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
               onClick={() => openStory(story)}
             />
           ))}
-          <div className="pt-10 text-center">
-            <button
-              onClick={() => navigate("stories")}
+          <div className="pt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <a
+              href="/stories"
+              onClick={(event) => { event.preventDefault(); navigate("stories") }}
               className={`font-body text-sm text-[#b896d1] border border-[rgba(184,150,209,0.28)] hover:border-[rgba(184,150,209,0.6)] hover:bg-[rgba(184,150,209,0.06)] transition-all duration-300 px-8 py-3 rounded-full min-h-[44px] tracking-wide ${focusRing}`}
             >
               View more stories →
-            </button>
+            </a>
+            <a
+              href="/series"
+              onClick={(event) => { event.preventDefault(); navigate("series-index") }}
+              className={`font-body text-sm text-[#b896d1] border border-[rgba(184,150,209,0.28)] hover:border-[rgba(184,150,209,0.6)] hover:bg-[rgba(184,150,209,0.06)] transition-all duration-300 px-8 py-3 rounded-full min-h-[44px] tracking-wide ${focusRing}`}
+            >
+              Browse by series →
+            </a>
           </div>
         </section>
 
@@ -1172,7 +1362,13 @@ export default function App({ settings }: { settings: PublicSiteSettings }) {
   return (
     <>
       <PublicAnalytics location={activeStoryId !== null && !activeStory ? null : publicAnalyticsLocation(page, activeStory)} />
-      <div inert={introVisible} aria-hidden={introVisible} style={{ visibility: introVisible ? "hidden" : "visible" }}>
+      <div inert={mounted && introVisible ? true : undefined} aria-hidden={mounted && introVisible ? "true" : undefined}>
+        {["home", "stories", "series", "series-index"].includes(page) && !activeStory && (feedStatus !== "ready" || allStories.length === 0) && (
+          <div role={feedStatus === "error" ? "alert" : "status"} className="mx-auto mt-8 max-w-3xl rounded-xl border border-[#b896d1]/20 bg-[#151120] px-6 py-4 text-sm text-[#c7afd9]">
+            {feedStatus === "loading" ? "Gathering the stories…" : feedStatus === "error" ? "Stories could not be loaded. Your connection or the story service may be unavailable." : "No stories published yet. Come back soon for the first piece."}
+            {feedStatus === "error" && <button onClick={() => setFeedAttempt((value) => value + 1)} className="ml-4 rounded-full border border-[#b896d1]/40 px-4 py-2">Try again</button>}
+          </div>
+        )}
         {pageContent}
       </div>
       <NewsletterGate settings={settings} ready={!introVisible && introMode === "full" && activeStoryId === null} />

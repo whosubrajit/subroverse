@@ -20,33 +20,42 @@ export async function PATCH(request: Request, context: StoryContext) {
 
   const input = parsed.data
   const slug = slugify(input.slug || input.title)
+  if (!slug) return NextResponse.json({ error: "The story needs a usable slug." }, { status: 400 })
+  const seriesSlug = input.series ? (slugify(input.seriesSlug || input.series) || null) : null
   const scheduledFor = input.scheduledFor ? new Date(input.scheduledFor) : null
   const publishedAt = input.publishedAt ? new Date(input.publishedAt) : (input.status === "published" ? existing.publishedAt ?? new Date() : existing.publishedAt)
-  const [updated] = await db
-    .update(stories)
-    .set({
-      ...input,
-      slug,
-      scheduledFor,
-      canonicalUrl: input.canonicalUrl || null,
-      publishedAt,
-      ...storyMetrics(input.body),
-      updatedBy: user.id,
-      updatedAt: new Date(),
+  
+  try {
+    const [updated] = await db
+      .update(stories)
+      .set({
+        ...input,
+        slug,
+        seriesSlug,
+        scheduledFor,
+        canonicalUrl: input.canonicalUrl || null,
+        publishedAt,
+        ...storyMetrics(input.body),
+        updatedBy: user.id,
+        updatedAt: new Date(),
+      })
+      .where(eq(stories.id, id))
+      .returning()
+
+    const [latest] = await db.select({ value: max(storyRevisions.revision) }).from(storyRevisions).where(eq(storyRevisions.storyId, id))
+    await db.insert(storyRevisions).values({
+      storyId: id,
+      revision: (latest?.value ?? 0) + 1,
+      snapshot: updated,
+      note: "Saved from the story studio",
+      createdBy: user.id,
     })
-    .where(eq(stories.id, id))
-    .returning()
 
-  const [latest] = await db.select({ value: max(storyRevisions.revision) }).from(storyRevisions).where(eq(storyRevisions.storyId, id))
-  await db.insert(storyRevisions).values({
-    storyId: id,
-    revision: (latest?.value ?? 0) + 1,
-    snapshot: updated,
-    note: "Saved from the story studio",
-    createdBy: user.id,
-  })
-
-  return NextResponse.json({ story: updated })
+    return NextResponse.json({ story: updated })
+  } catch (error) {
+    console.error("Story update failed", error)
+    return NextResponse.json({ error: "That slug may already exist." }, { status: 409 })
+  }
 }
 
 export async function DELETE(_request: Request, context: StoryContext) {

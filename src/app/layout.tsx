@@ -1,31 +1,20 @@
 import type { Metadata, Viewport } from "next"
 import type { ReactNode } from "react"
 import SiteBackground from "@/components/SiteBackground"
+import { getSiteUrl } from "@/lib/site-url"
 import "@/index.css"
 
-const getBaseUrl = () => {
-  let url = process.env.NEXT_PUBLIC_SITE_URL || "https://subroverse.com"
-  if (!url.startsWith("http://") && !url.startsWith("https://")) {
-    url = "https://" + url
-  }
-  try {
-    return new URL(url)
-  } catch (e) {
-    return new URL("https://subroverse.com")
-  }
-}
-
 export const metadata: Metadata = {
-  metadataBase: getBaseUrl(),
+  metadataBase: getSiteUrl(),
   title: {
     default: "SubroVerse — Subrajit's Letters",
-    template: "%s · SubroVerse",
+    template: "%s — SubroVerse",
   },
   description:
     "Subrajit's Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
   applicationName: "SubroVerse",
-  authors: [{ name: "Subrajit" }],
-  creator: "Subrajit",
+  authors: [{ name: "Dibyo Singho Barua Subrajit", url: "/about" }],
+  creator: "Dibyo Singho Barua Subrajit",
   openGraph: {
     type: "website",
     siteName: "SubroVerse",
@@ -57,16 +46,18 @@ const jsonLd = {
     {
       "@type": "WebSite",
       name: "SubroVerse",
-      url: getBaseUrl().origin,
+      alternateName: ["Subro Verse", "SubroVerse by Subrajit", "Dibyo Singho Barua Subrajit", "Subro's Shree"],
+      url: getSiteUrl().origin,
       description: "Subrajit's Letters that became too long, observations that became too precise, and feelings that refused to stay feeling.",
-      inLanguage: "en",
-      author: { "@id": "#author" },
+      inLanguage: ["bn", "en"],
+      author: { "@id": `${getSiteUrl().origin}/about#author` },
     },
     {
       "@type": "Person",
-      "@id": "#author",
-      name: "Subrajit",
-      url: getBaseUrl().origin,
+      "@id": `${getSiteUrl().origin}/about#author`,
+      name: "Dibyo Singho Barua Subrajit",
+      alternateName: ["Subrajit", "Subro"],
+      url: `${getSiteUrl().origin}/about`,
     },
   ],
 }

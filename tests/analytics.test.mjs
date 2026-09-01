@@ -32,22 +32,25 @@ test("missing credentials do not call Cloudflare or invent totals", async () => 
   assert.equal("visitors" in result, false)
 })
 
-test("Cloudflare count request stays server-side and returns distinct visitors and views", async () => {
+test("Cloudflare request groups daily IP counts and page views without calling them people", async () => {
   const result = await fetchTrafficReport({ token: "test-only", zoneId: "zone_test" }, async (url, options) => {
     assert.equal(url, "https://api.cloudflare.com/client/v4/graphql")
     assert.equal(options.method, "POST")
     assert.equal(options.headers["Authorization"], "Bearer test-only")
     assert.equal(options.next.revalidate, 300)
-    
+
     const body = JSON.parse(options.body)
     assert.equal(body.variables.zoneTag, "zone_test")
+    assert.match(body.query, /dimensions\s*\{\s*date\s*\}/)
+    assert.ok(body.variables.dateLeq > body.variables.dateGt)
     return Response.json({
       data: {
         viewer: {
           zones: [
             {
               httpRequests1dGroups: [
-                { 
+                {
+                  dimensions: { date: "2026-09-01" },
                   sum: { pageViews: 57 },
                   uniq: { uniques: 23 }
                 }
@@ -58,12 +61,12 @@ test("Cloudflare count request stays server-side and returns distinct visitors a
       }
     })
   })
-  assert.deepEqual(result, { status: "ready", visitors: 23, pageviews: 57 })
+  assert.deepEqual(result, { status: "ready", dailyUniqueIPs: 23, pageviews: 57 })
 })
 
 test("zero traffic is distinct from malformed or unavailable reports", async () => {
   const config = { token: "test-only", zoneId: "zone_test" }
-  
+
   const validZeroPayload = {
     data: {
       viewer: {
@@ -75,17 +78,30 @@ test("zero traffic is distinct from malformed or unavailable reports", async () 
       }
     }
   }
-  assert.deepEqual(await fetchTrafficReport(config, async () => Response.json(validZeroPayload)), { status: "ready", visitors: 0, pageviews: 0 })
-  
-  for (const payload of [{}, { data: [] }, { data: { viewer: null } }, { errors: [{ message: "bad query" }] }]) {
+  assert.deepEqual(await fetchTrafficReport(config, async () => Response.json(validZeroPayload)), { status: "ready", dailyUniqueIPs: 0, pageviews: 0 })
+
+  for (const payload of [{}, { data: [] }, { data: { viewer: null } }, { data: { viewer: { zones: [] } } }, { errors: [{ message: "bad query" }] }]) {
     assert.equal((await fetchTrafficReport(config, async () => Response.json(payload))).status, "error")
   }
-  
+
   for (const status of [401, 403, 500]) {
     const result = await fetchTrafficReport(config, async () => new Response("private upstream detail", { status }))
     assert.equal(result.status, "error")
     assert.equal(result.message.includes("private upstream detail"), false)
   }
-  
+
   assert.equal((await fetchTrafficReport(config, async () => { throw new Error("timeout") })).status, "error")
+})
+
+test("daily returning IPs are explicitly summed and upstream errors stay private", async () => {
+  const config = { token: "test-only", zoneId: "zone_test" }
+  const report = await fetchTrafficReport(config, async () => Response.json({ data: { viewer: { zones: [{ httpRequests1dGroups: [
+    { dimensions: { date: "2026-08-31" }, sum: { pageViews: 10 }, uniq: { uniques: 3 } },
+    { dimensions: { date: "2026-09-01" }, sum: { pageViews: 8 }, uniq: { uniques: 3 } },
+  ] }] } } }))
+  assert.deepEqual(report, { status: "ready", dailyUniqueIPs: 6, pageviews: 18 })
+  assert.equal("visitors" in report, false)
+  const failed = await fetchTrafficReport(config, async () => Response.json({ errors: [{ message: "private server detail" }] }))
+  assert.equal(failed.status, "error")
+  assert.equal(failed.message.includes("private server detail"), false)
 })

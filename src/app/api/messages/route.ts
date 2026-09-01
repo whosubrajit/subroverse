@@ -3,12 +3,13 @@ import { z } from "zod"
 import { getDb } from "@/db"
 import { contactMessages } from "@/db/schema"
 import { getMessageDevice } from "@/lib/message-device"
+import { consumeRateLimit, getRequestIdentifier } from "@/lib/rate-limit"
 
 const messageSchema = z.object({
   name: z.string().trim().max(120).optional().default(""),
   email: z.union([z.literal(""), z.email().max(320)]).optional().default(""),
   message: z.string().trim().min(1).max(12000),
-  company: z.string().max(0).optional(),
+  company: z.string().max(200).optional().default(""),
 })
 
 export async function POST(request: Request) {
@@ -16,6 +17,19 @@ export async function POST(request: Request) {
     const parsed = messageSchema.safeParse(await request.json())
     if (!parsed.success) return NextResponse.json({ error: "Please check the message and try again." }, { status: 400 })
     if (parsed.data.company) return NextResponse.json({ ok: true })
+
+    const rateLimit = await consumeRateLimit({
+      action: "contact-message",
+      identifier: getRequestIdentifier(request.headers),
+      limit: 5,
+      windowMs: 60 * 60 * 1000,
+    })
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        { error: "Too many messages were sent. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(rateLimit.retryAfterSeconds) } },
+      )
+    }
 
     const [created] = await getDb().insert(contactMessages).values({
       name: parsed.data.name || null,

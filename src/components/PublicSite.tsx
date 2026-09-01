@@ -1,10 +1,17 @@
-"use client"
-
-import dynamic from "next/dynamic"
+import App from "@/App"
 import type { PublicSiteSettings } from "@/lib/site-settings-schema"
+import type { PublicStory } from "@/lib/story-feed"
 
-const App = dynamic(() => import("@/App"), { ssr: false })
-
-export default function PublicSite({ settings }: { settings: PublicSiteSettings }) {
-  return <App settings={settings} />
+export default function PublicSite({
+  settings,
+  initialStories,
+  initialPage = "home",
+  initialSeries = null,
+}: {
+  settings: PublicSiteSettings
+  initialStories: PublicStory[]
+  initialPage?: string
+  initialSeries?: string | null
+}) {
+  return <App settings={settings} initialStories={initialStories} initialPage={initialPage} initialSeries={initialSeries} />
 }

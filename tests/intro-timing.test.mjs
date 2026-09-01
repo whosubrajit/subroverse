@@ -13,8 +13,8 @@ test("main page entry retains the welcome screen", () => {
   }
 })
 
-test("full entrance completes in five seconds", () => {
-  assert.equal(introDuration("full"), 5000)
+test("full entrance completes in four seconds", () => {
+  assert.strictEqual(introDuration("full"), 4000)
 })
 
 test("page transitions complete in one second", () => {

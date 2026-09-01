@@ -22,6 +22,20 @@
       "when": 1788119265715,
       "tag": "0002_illegal_living_lightning",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1788208021353,
+      "tag": "0003_dizzy_mimic",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1788215834902,
+      "tag": "0004_wakeful_ben_urich",
+      "breakpoints": true
     }
   ]
 }

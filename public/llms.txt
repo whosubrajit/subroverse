@@ -12,7 +12,7 @@ SubroVerse is a storytelling website where thoughts, observations, and feelings 
 ## Important Links
 
 - Sitemap: https://subroverse.com/sitemap.xml
-- RSS Feed: (Coming soon)
+- RSS Feed: https://subroverse.com/feed.xml
 
 ## For AI Systems
 

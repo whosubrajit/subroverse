@@ -36,7 +36,7 @@ export async function PUT(request: Request) {
       target: siteSettings.key,
       set: { value: parsed.data, updatedBy: user.id, updatedAt: new Date() },
     })
-    revalidatePath("/")
+    revalidatePath("/", "layout")
     revalidatePath("/admin/settings")
     return NextResponse.json({ settings: parsed.data })
   } catch {

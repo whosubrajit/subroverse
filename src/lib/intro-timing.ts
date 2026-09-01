@@ -8,5 +8,5 @@ export function shouldShowEntryIntro(hash: string) {
 
 export function introDuration(mode: IntroMode, reducedMotion = false) {
   if (reducedMotion) return 150
-  return mode === "full" ? 5000 : 1000
+  return mode === "full" ? 4000 : 1000
 }

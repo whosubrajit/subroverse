@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import type { PublicSiteSettings } from "@/lib/site-settings-schema"
 import { newsletterEmailError, newsletterEmailSchema } from "@/lib/newsletter-email"
@@ -144,7 +145,7 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
                 onChange={(event) => setCompany(event.target.value)}
                 tabIndex={-1}
                 autoComplete="off"
-                className="hidden"
+                className="pointer-events-none absolute left-[-10000px] top-auto h-px w-px overflow-hidden"
                 aria-hidden="true"
               />
               <button
@@ -159,9 +160,9 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
             <p id="newsletter-email-feedback" className="mt-3 text-xs leading-5 text-[#d89aaa]" role="alert">{message}</p>
             <div className="mt-5 flex flex-col gap-3 text-xs text-[#6f617e] sm:flex-row sm:items-center sm:justify-between">
               <span>No noise. Unsubscribe whenever you wish.</span>
-              <button type="button" onClick={dismiss} className="text-left underline decoration-white/15 underline-offset-4 hover:text-[#b896d1]">
-                Maybe later
-              </button>
+              <Link href="/privacy" onClick={dismiss} className="text-left underline decoration-white/15 underline-offset-4 hover:text-[#b896d1]">
+                Privacy policy
+              </Link>
             </div>
           </form>
         )}

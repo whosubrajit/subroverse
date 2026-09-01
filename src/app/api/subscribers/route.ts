@@ -4,13 +4,14 @@ import { z } from "zod"
 import { getDb } from "@/db"
 import { subscribers } from "@/db/schema"
 import { newsletterEmailError, newsletterEmailSchema } from "@/lib/newsletter-email"
+import { consumeRateLimit, getRequestIdentifier } from "@/lib/rate-limit"
 
 export const runtime = "nodejs"
 
 const signupSchema = z.object({
   email: newsletterEmailSchema,
   source: z.string().trim().max(80).default("first-entry-modal"),
-  company: z.string().max(0).optional(),
+  company: z.string().max(200).optional().default(""),
 })
 
 export async function POST(request: Request) {
@@ -20,10 +21,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: newsletterEmailError }, { status: 400 })
     }
 
+    // Bots commonly fill this off-screen field. Return a normal-looking success
+    // without storing anything or revealing that the trap was triggered.
     if (parsed.data.company) return NextResponse.json({ ok: true })
 
     const db = getDb()
     const email = parsed.data.email.trim().toLowerCase()
+    const clientIdentifier = getRequestIdentifier(request.headers)
+    const [clientLimit, emailLimit] = await Promise.all([
+      consumeRateLimit({ action: "newsletter-client", identifier: clientIdentifier, limit: 6, windowMs: 60 * 60 * 1000 }),
+      consumeRateLimit({ action: "newsletter-email", identifier: email, limit: 3, windowMs: 60 * 60 * 1000 }),
+    ])
+    if (!clientLimit.allowed || !emailLimit.allowed) {
+      const retryAfter = Math.max(clientLimit.retryAfterSeconds, emailLimit.retryAfterSeconds)
+      return NextResponse.json(
+        { error: "Too many attempts. Please try again later." },
+        { status: 429, headers: { "Retry-After": String(retryAfter) } },
+      )
+    }
+
     const existing = await db
       .select({ status: subscribers.status })
       .from(subscribers)

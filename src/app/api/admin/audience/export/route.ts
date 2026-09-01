@@ -3,12 +3,11 @@ import { NextResponse } from "next/server"
 import { getDb } from "@/db"
 import { subscribers } from "@/db/schema"
 import { getAdminUser } from "@/lib/admin"
+import { csvCell } from "@/lib/csv"
+import { getSiteUrl } from "@/lib/site-url"
+import { unsubscribeUrl } from "@/lib/unsubscribe"
 
 export const runtime = "nodejs"
-
-function csvCell(value: string) {
-  return `"${value.replaceAll('"', '""')}"`
-}
 
 export async function GET() {
   if (!(await getAdminUser())) {
@@ -17,6 +16,7 @@ export async function GET() {
 
   const rows = await getDb()
     .select({
+      id: subscribers.id,
       email: subscribers.email,
       subscribedAt: subscribers.confirmedAt,
       source: subscribers.source,
@@ -25,13 +25,18 @@ export async function GET() {
     .where(eq(subscribers.status, "active"))
     .orderBy(desc(subscribers.confirmedAt))
 
+  const origin = getSiteUrl().origin
+  const sharedUnsubscribeUrl = unsubscribeUrl(origin)
+  const exportRows = rows.map((row) => ({ ...row, unsubscribeUrl: sharedUnsubscribeUrl }))
+
   const csv = [
-    "email,subscribed_at,source",
-    ...rows.map((row) =>
+    "email,subscribed_at,source,unsubscribe_url",
+    ...exportRows.map((row) =>
       [
         csvCell(row.email),
         csvCell(row.subscribedAt?.toISOString() ?? ""),
         csvCell(row.source),
+        csvCell(row.unsubscribeUrl),
       ].join(","),
     ),
   ].join("\n")

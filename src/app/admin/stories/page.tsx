@@ -4,13 +4,19 @@ import AdminAccessGate from "@/components/admin/AdminAccessGate"
 import { getDb } from "@/db"
 import { stories } from "@/db/schema"
 import { getAdminUser } from "@/lib/admin"
+import { effectiveStoryStatus, parseStoryFilter, storyFilters } from "@/lib/story-publication"
 
 export const dynamic = "force-dynamic"
 export const metadata = { title: "Stories", robots: { index: false, follow: false } }
 
-export default async function StoriesStudioPage() {
+export default async function StoriesStudioPage({ searchParams }: { searchParams: Promise<{ status?: string | string[] }> }) {
   if (!(await getAdminUser())) return <AdminAccessGate />
   const rows = process.env.DATABASE_URL ? await getDb().select().from(stories).orderBy(desc(stories.updatedAt)) : []
+  const filter = parseStoryFilter((await searchParams).status)
+  const now = new Date()
+  const visible = rows.map((story) => ({ ...story, status: effectiveStoryStatus(story, now) }))
+    .filter((story) => filter === "all" || story.status === filter)
+  const labels = { all: "All", draft: "Drafts", published: "Published", scheduled: "Scheduled", archived: "Archived" }
 
   return (
     <main className="min-h-screen px-5 py-8 text-[#f0ebf5] md:px-10">
@@ -19,16 +25,16 @@ export default async function StoriesStudioPage() {
           <div><Link href="/admin" className="text-xs text-[#827491] hover:text-[#b896d1]">← Writer’s room</Link><p className="font-cursive mt-5 text-lg text-[#b896d1]">the archive</p><h1 className="font-display text-5xl font-light italic">Stories</h1></div>
           <Link href="/admin/stories/new" className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#b896d1] px-6 text-sm text-[#120e1f]">＋ New story</Link>
         </header>
-        <div className="mt-8 flex flex-wrap gap-2">{["All", "Drafts", "Published", "Scheduled", "Archived"].map((filter, index) => <button key={filter} className={`min-h-9 rounded-full px-4 text-xs ${index === 0 ? "bg-[#b896d1]/15 text-[#d6bdf0]" : "border border-white/[.06] text-[#74667f]"}`}>{filter}</button>)}</div>
+        <nav aria-label="Filter stories" className="mt-8 flex flex-wrap gap-2">{storyFilters.map((value) => <Link key={value} href={value === "all" ? "/admin/stories" : `/admin/stories?status=${value}`} aria-current={filter === value ? "page" : undefined} className={`inline-flex min-h-9 items-center rounded-full px-4 text-xs ${filter === value ? "bg-[#b896d1]/15 text-[#d6bdf0]" : "border border-white/[.06] text-[#74667f]"}`}>{labels[value]}</Link>)}</nav>
         <section className="mt-6 overflow-hidden rounded-2xl border border-white/[.06] bg-[#151120]">
-          {rows.length ? rows.map((story) => (
+          {visible.length ? visible.map((story) => (
             <article key={story.id} className="grid gap-4 border-b border-white/[.05] px-5 py-5 last:border-0 md:grid-cols-[1fr_130px_120px_90px] md:items-center">
               <div><h2 className="font-display text-xl font-light italic">{story.title}</h2><p className="mt-1 text-xs text-[#6f627e]">/{story.slug} · {story.wordCount} words</p></div>
               <span className="text-xs text-[#8f819f]">{story.format}</span>
               <span className={`w-fit rounded-full px-3 py-1 text-[10px] uppercase tracking-widest ${story.status === "published" ? "bg-emerald-400/10 text-emerald-300" : story.status === "scheduled" ? "bg-blue-400/10 text-blue-300" : "bg-white/5 text-[#8f819f]"}`}>{story.status}</span>
               <Link href={`/admin/stories/${story.id}`} className="text-xs text-[#b896d1] hover:text-[#d6bdf0]">Edit →</Link>
             </article>
-          )) : <div className="grid min-h-72 place-items-center px-6 text-center"><div><p className="font-display text-2xl font-light italic text-[#a99bb9]">No database stories yet.</p><p className="mt-2 text-sm text-[#62566f]">Your first published piece will begin the archive.</p></div></div>}
+          )) : <div className="grid min-h-72 place-items-center px-6 text-center"><div><p className="font-display text-2xl font-light italic text-[#a99bb9]">{filter === "all" ? "No database stories yet." : `No ${labels[filter].toLowerCase()} stories.`}</p><p className="mt-2 text-sm text-[#62566f]">Choose another filter or start a new piece.</p></div></div>}
         </section>
       </div>
     </main>

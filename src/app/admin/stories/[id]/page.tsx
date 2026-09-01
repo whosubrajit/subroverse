@@ -14,7 +14,7 @@ export default async function EditStoryPage({ params }: { params: Promise<{ id: 
   const { id } = await params
   const [story] = await getDb().select().from(stories).where(eq(stories.id, id)).limit(1)
   if (!story) notFound()
-  return <StoryEditor initialStory={{
+  return <StoryEditor key={story.id} initialStory={{
     id: story.id,
     title: story.title,
     slug: story.slug,
@@ -23,10 +23,11 @@ export default async function EditStoryPage({ params }: { params: Promise<{ id: 
     body: story.body,
     format: story.format,
     series: story.series ?? "",
+    seriesSlug: story.seriesSlug ?? "",
     status: story.status,
     featured: story.featured,
-    scheduledFor: story.scheduledFor ? story.scheduledFor.toISOString().slice(0, 16) : "",
-    publishedAt: story.publishedAt ? story.publishedAt.toISOString().slice(0, 16) : "",
+    scheduledFor: story.scheduledFor?.toISOString() ?? "",
+    publishedAt: story.publishedAt?.toISOString() ?? "",
     seoTitle: story.seoTitle ?? "",
     seoDescription: story.seoDescription ?? "",
     canonicalUrl: story.canonicalUrl ?? "",

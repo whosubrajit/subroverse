@@ -1,16 +1,14 @@
+import type { Metadata } from "next"
 import PublicSite from "@/components/PublicSite"
-import { readPublicSiteSettings } from "@/lib/site-settings"
+import { readPublicPageData } from "@/lib/public-page-data"
 
 export const dynamic = "force-dynamic"
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+}
+
 export default async function HomePage() {
-  const settings = await readPublicSiteSettings()
-  return (
-    <>
-      <h1 style={{ position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", whiteSpace: "nowrap", borderWidth: 0 }}>
-        SubroVerse, a storyverse by {settings.profileName}
-      </h1>
-      <PublicSite settings={settings} />
-    </>
-  )
+  const { settings, stories } = await readPublicPageData()
+  return <PublicSite settings={settings} initialStories={stories} />
 }
