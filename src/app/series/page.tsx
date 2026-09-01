@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: "Story Series",
     description: "Browse all story collections and series written by Subrajit.",
     url: "/series",
+    images: ["/opengraph-image.png"],
   },
 }
 

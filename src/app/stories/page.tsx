@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: "Bengali Letters & Stories",
     description: "Letters, short stories, observations, and story series by Subrajit.",
     url: "/stories",
+    images: ["/opengraph-image.png"],
   },
 }
 

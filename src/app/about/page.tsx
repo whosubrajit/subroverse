@@ -6,13 +6,14 @@ import { getSiteUrl } from "@/lib/site-url"
 export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
-  title: "About Subrajit",
+  title: "About Subrajit | SubroVerse",
   description: "Meet Subrajit—Dibyo Singho Barua Subrajit—the writer behind SubroVerse and this quiet garden of Bengali and English letters.",
   alternates: { canonical: "/about" },
   openGraph: {
-    title: "About Subrajit",
+    title: "About Subrajit | SubroVerse",
     description: "Meet Subrajit, also known as Dibyo Singho Barua Subrajit, the writer behind SubroVerse.",
     url: "/about",
+    images: ["/opengraph-image.png"],
   },
 }
 

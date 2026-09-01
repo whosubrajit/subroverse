@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: "Write to Subrajit",
     description: "Send a private note through SubroVerse.",
     url: "/write",
+    images: ["/opengraph-image.png"],
   },
 }
 
