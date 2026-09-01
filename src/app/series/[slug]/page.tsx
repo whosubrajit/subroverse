@@ -4,6 +4,7 @@ import { findPublicSeries } from "@/lib/stories"
 import PublicSite from "@/components/PublicSite"
 import { readPublicPageData } from "@/lib/public-page-data"
 import { getSiteUrl } from "@/lib/site-url"
+import { getAllSeriesMetadata } from "@/lib/series-metadata"
 
 type SeriesPageProps = { params: Promise<{ slug: string }> }
 export const dynamic = "force-dynamic"
@@ -12,13 +13,16 @@ export async function generateMetadata({ params }: SeriesPageProps): Promise<Met
   const slug = decodeURIComponent((await params).slug)
   const seriesName = await findPublicSeries(slug)
   if (!seriesName) return { title: "Series not found" }
+  const allMeta = await getAllSeriesMetadata()
+  const description = allMeta.find(m => m.name === seriesName)?.description || `Read all stories in the ${seriesName} collection by Subrajit.`
+
   return {
     title: seriesName,
-    description: `Read all stories in the ${seriesName} collection by Subrajit.`,
+    description,
     alternates: { canonical: `/series/${slug}` },
     openGraph: {
       title: seriesName,
-      description: `Read all stories in the ${seriesName} collection by Subrajit.`,
+      description,
       url: `/series/${slug}`,
     },
   }
@@ -39,7 +43,7 @@ export default async function SeriesPage({ params }: SeriesPageProps) {
         "@type": "CollectionPage",
         "@id": `${origin}/series/${slug}#collection`,
         name: seriesName,
-        description: `Read all stories in the ${seriesName} collection by Subrajit.`,
+        description: seriesMetadata.find(m => m.name === seriesName)?.description || `Read all stories in the ${seriesName} collection by Subrajit.`,
         url: `${origin}/series/${slug}`,
         mainEntity: {
           "@type": "ItemList",
