@@ -43,6 +43,13 @@
       "when": 1788281169782,
       "tag": "0005_absent_wrecking_crew",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1788470613478,
+      "tag": "0006_married_iron_fist",
+      "breakpoints": true
     }
   ]
 }

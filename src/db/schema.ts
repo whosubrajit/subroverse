@@ -206,6 +206,7 @@ export const contactMessages = pgTable(
     message: text("message").notNull(),
     deviceType: text("device_type"),
     operatingSystem: text("operating_system"),
+    ipAddress: text("ip_address"),
     status: text("status").notNull().default("unread"),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     archivedAt: timestamp("archived_at", { withTimezone: true }),

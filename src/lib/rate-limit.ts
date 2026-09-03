@@ -3,7 +3,7 @@ import { getDb } from "@/db"
 import { requestRateLimits } from "@/db/schema"
 import { getRequestIdentifier, rateLimitKey } from "@/lib/request-identity"
 
-export { getRequestIdentifier } from "@/lib/request-identity"
+export { getRequestIdentifier, getIpAddress } from "@/lib/request-identity"
 
 type RateLimitOptions = {
   action: string

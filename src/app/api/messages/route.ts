@@ -3,7 +3,7 @@ import { z } from "zod"
 import { getDb } from "@/db"
 import { contactMessages, subscribers } from "@/db/schema"
 import { getMessageDevice } from "@/lib/message-device"
-import { consumeRateLimit, getRequestIdentifier } from "@/lib/rate-limit"
+import { consumeRateLimit, getRequestIdentifier, getIpAddress } from "@/lib/rate-limit"
 
 const messageSchema = z.object({
   name: z.string().trim().max(120).optional().default(""),
@@ -37,6 +37,7 @@ export async function POST(request: Request) {
       name: parsed.data.name || null,
       email: parsed.data.email || null,
       message: parsed.data.message,
+      ipAddress: getIpAddress(request.headers),
       ...getMessageDevice(request.headers),
     }).returning({ id: contactMessages.id })
 
