@@ -10,6 +10,8 @@ import EnvelopeIntro from "@/components/EnvelopeIntro"
 import { shouldShowEntryIntro } from "@/lib/intro-timing"
 import { loadStoryFeed } from "@/lib/story-feed"
 import type { PublicStory } from "@/lib/story-feed"
+import ReactMarkdown from "react-markdown"
+import rehypeRaw from "rehype-raw"
 import suberoImgAsset from "@/imports/Subroooooooo.jpeg"
 import profileFlowerAsset from "@/imports/Untitled__Logo___7_.png"
 
@@ -239,6 +241,53 @@ function StoryView({
     >
       <Nav page="home" onNavigate={onNavigate} onBack={onBack} onBrand={onBrand} />
       <main className="max-w-2xl mx-auto px-6 pt-12 pb-32">
+        <nav aria-label="Breadcrumb" className="font-body text-xs mb-8">
+          <ol className="flex flex-wrap items-center gap-1.5 text-[#8474a0]">
+            <li className="inline-flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onBrand}
+                className="transition-colors hover:text-[#b896d1] cursor-pointer"
+              >
+                SubroVerse
+              </button>
+            </li>
+            <li className="inline-flex items-center gap-1.5">
+              <span className="text-[#8474a0]/40" aria-hidden="true">›</span>
+              <button
+                type="button"
+                onClick={() => onNavigate("stories")}
+                className="transition-colors hover:text-[#b896d1] cursor-pointer"
+              >
+                Stories
+              </button>
+            </li>
+            {story.series && story.seriesSlug && (
+              <li className="inline-flex items-center gap-1.5">
+                <span className="text-[#8474a0]/40" aria-hidden="true">›</span>
+                <a
+                  href={`/series/${story.seriesSlug}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const slug = story.seriesSlug
+                    window.history.pushState(null, "", `/series/${slug}`);
+                    window.dispatchEvent(new Event('popstate'));
+                  }}
+                  className="transition-colors hover:text-[#b896d1] cursor-pointer"
+                >
+                  {story.series}
+                </a>
+              </li>
+            )}
+            <li className="inline-flex items-center gap-1.5">
+              <span className="text-[#8474a0]/40" aria-hidden="true">›</span>
+              <span className="text-[#dcd3e6] truncate max-w-[180px] sm:max-w-xs" aria-current="page">
+                {story.title}
+              </span>
+            </li>
+          </ol>
+        </nav>
         <p className="font-cursive text-sm text-[#b896d1] opacity-70">
           {story.category}
           {story.series && story.seriesSlug ? (
@@ -267,18 +316,19 @@ function StoryView({
           {story.date} · {story.readTime} read
         </p>
 
-        {story.body.length > 0 ? (
-          <div className="prose-story">
-            {story.body.map((para, i) => (
-              <p key={i}>{para}</p>
-            ))}
-          </div>
-        ) : (
-          <div className="border border-[rgba(184,150,209,0.15)] rounded-xl p-8 mb-10">
-            <p className="font-body text-xs text-[#8a7a9e] tracking-widest uppercase mb-4">excerpt</p>
-            <p className="font-body text-[#dcd3e6] leading-relaxed italic">{story.excerpt}</p>
-          </div>
-        )}
+        {(() => {
+          const bodyText = typeof story.body === "string" ? story.body : story.body.join("\n\n")
+          return bodyText.trim().length > 0 ? (
+            <article className="prose-story">
+              <ReactMarkdown rehypePlugins={[rehypeRaw]}>{bodyText}</ReactMarkdown>
+            </article>
+          ) : (
+            <div className="border border-[rgba(184,150,209,0.15)] rounded-xl p-8 mb-10">
+              <p className="font-body text-xs text-[#8a7a9e] tracking-widest uppercase mb-4">excerpt</p>
+              <p className="font-body text-[#dcd3e6] leading-relaxed italic">{story.excerpt}</p>
+            </div>
+          )
+        })()}
 
         <FloralDivider />
         <p className="font-cursive text-center text-[#b896d1] text-xl opacity-50 mb-12">

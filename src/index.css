@@ -97,6 +97,57 @@ body {
   margin-top: 0.15em;
   color: #b896d1;
 }
+
+.prose-story img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 1rem;
+  margin: 2.5rem auto;
+  border: 1px solid rgba(184, 150, 209, 0.15);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
+
+.prose-story figure {
+  margin: 2.5rem 0;
+  text-align: center;
+}
+
+.prose-story figcaption {
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+  color: #9e90af;
+  font-style: italic;
+  text-align: center;
+}
+
+.prose-story a {
+  color: #d6bdf0;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-decoration-color: rgba(184, 150, 209, 0.4);
+  transition: color 0.2s, text-decoration-color 0.2s;
+}
+
+.prose-story a:hover {
+  color: #f0ebf5;
+  text-decoration-color: #b896d1;
+}
+
+.prose-story blockquote {
+  border-left: 2px solid #b896d1;
+  padding-left: 1.5rem;
+  margin: 2rem 0;
+  font-style: italic;
+  color: #c7b9d9;
+}
+
+.prose-story hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(to right, transparent, rgba(184, 150, 209, 0.3), transparent);
+  margin: 3rem 0;
+}
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -3,22 +3,43 @@
 import Link from "next/link"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import type { PublicSiteSettings } from "@/lib/site-settings-schema"
-import { newsletterEmailError, newsletterEmailSchema } from "@/lib/newsletter-email"
+import {
+  newsletterEmailError,
+  newsletterEmailSchema,
+} from "@/lib/newsletter-email"
 
 const SEEN_KEY = "subroverse_newsletter_prompt_v1"
 
-export default function NewsletterGate({ ready, settings }: { ready: boolean; settings: PublicSiteSettings }) {
+export default function NewsletterGate({
+  ready,
+  settings,
+}: {
+  ready: boolean
+  settings: PublicSiteSettings
+}) {
   const [visible, setVisible] = useState(false)
   const [email, setEmail] = useState("")
   const [company, setCompany] = useState("")
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle")
+  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">(
+    "idle",
+  )
   const [message, setMessage] = useState("")
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const previewMode = new URLSearchParams(window.location.search).get("newsletter") === "preview"
-    if (!ready || (!previewMode && (!settings.newsletterEnabled || window.localStorage.getItem(SEEN_KEY)))) return
-    const timer = window.setTimeout(() => setVisible(true), settings.newsletterDelaySeconds * 1000)
+    const previewMode =
+      new URLSearchParams(window.location.search).get("newsletter") ===
+      "preview"
+    if (
+      !ready ||
+      (!previewMode &&
+        (!settings.newsletterEnabled || window.localStorage.getItem(SEEN_KEY)))
+    )
+      return
+    const timer = window.setTimeout(
+      () => setVisible(true),
+      settings.newsletterDelaySeconds * 1000,
+    )
     return () => window.clearTimeout(timer)
   }, [ready, settings.newsletterEnabled, settings.newsletterDelaySeconds])
 
@@ -59,10 +80,18 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
       const response = await fetch("/api/subscribers", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email: validatedEmail.data, company, source: "first-entry-modal" }),
+        body: JSON.stringify({
+          email: validatedEmail.data,
+          company,
+          source: "first-entry-modal",
+        }),
       })
-      const data = (await response.json()) as { error?: string; alreadySubscribed?: boolean }
-      if (!response.ok) throw new Error(data.error ?? "Could not join the list.")
+      const data = (await response.json()) as {
+        error?: string
+        alreadySubscribed?: boolean
+      }
+      if (!response.ok)
+        throw new Error(data.error ?? "Could not join the list.")
 
       window.localStorage.setItem(SEEN_KEY, "subscribed")
       setState("sent")
@@ -73,7 +102,9 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
       )
     } catch (error) {
       setState("error")
-      setMessage(error instanceof Error ? error.message : "Could not join the list.")
+      setMessage(
+        error instanceof Error ? error.message : "Could not join the list.",
+      )
     }
   }
 
@@ -81,11 +112,13 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
 
   return (
     <div
+      data-nosnippet
       className="fixed inset-0 z-[180] grid place-items-center bg-[#0c0915]/80 px-5 backdrop-blur-md"
       role="presentation"
       onMouseDown={(event) => event.target === event.currentTarget && dismiss()}
     >
       <section
+        data-nosnippet
         role="dialog"
         aria-modal="true"
         aria-labelledby="newsletter-title"
@@ -104,7 +137,9 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
           ×
         </button>
 
-        <p className="font-cursive mb-4 text-xl text-[#b896d1]">a note before you wander</p>
+        <p className="font-cursive mb-4 text-xl text-[#b896d1]">
+          a note before you wander
+        </p>
         <h2
           id="newsletter-title"
           className="font-display max-w-md text-3xl font-light italic leading-tight text-[#f0ebf5] md:text-4xl"
@@ -116,12 +151,17 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
         </p>
 
         {state === "sent" ? (
-          <div className="mt-8 rounded-2xl border border-[rgba(184,150,209,.18)] bg-[rgba(184,150,209,.06)] px-5 py-4 text-sm leading-6 text-[#d6bdf0]" role="status">
+          <div
+            className="mt-8 rounded-2xl border border-[rgba(184,150,209,.18)] bg-[rgba(184,150,209,.06)] px-5 py-4 text-sm leading-6 text-[#d6bdf0]"
+            role="status"
+          >
             {message}
           </div>
         ) : (
           <form onSubmit={submit} className="mt-8">
-            <label htmlFor="newsletter-email" className="sr-only">Email address</label>
+            <label htmlFor="newsletter-email" className="sr-only">
+              Email address
+            </label>
             <div className="flex flex-col gap-3 sm:flex-row">
               <input
                 ref={inputRef}
@@ -135,7 +175,10 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
                 placeholder="you@gmail.com"
                 maxLength={320}
                 aria-describedby="newsletter-email-hint newsletter-email-feedback"
-                aria-invalid={state === "error" && !newsletterEmailSchema.safeParse(email).success}
+                aria-invalid={
+                  state === "error" &&
+                  !newsletterEmailSchema.safeParse(email).success
+                }
                 className="font-body min-h-12 flex-1 rounded-full border border-[rgba(184,150,209,.2)] bg-[#120e1f] px-5 text-sm text-[#f0ebf5] outline-none placeholder:text-[#5f526e] focus:border-[#b896d1]"
               />
               <input
@@ -156,11 +199,26 @@ export default function NewsletterGate({ ready, settings }: { ready: boolean; se
                 {state === "sending" ? "sending…" : "Keep me in the story"}
               </button>
             </div>
-            <p id="newsletter-email-hint" className="mt-3 text-xs leading-5 text-[#a99bb9]">Gmail and iCloud addresses only.</p>
-            <p id="newsletter-email-feedback" className="mt-3 text-xs leading-5 text-[#d89aaa]" role="alert">{message}</p>
+            <p
+              id="newsletter-email-hint"
+              className="mt-3 text-xs leading-5 text-[#a99bb9]"
+            >
+              Gmail and iCloud addresses only.
+            </p>
+            <p
+              id="newsletter-email-feedback"
+              className="mt-3 text-xs leading-5 text-[#d89aaa]"
+              role="alert"
+            >
+              {message}
+            </p>
             <div className="mt-5 flex flex-col gap-3 text-xs text-[#6f617e] sm:flex-row sm:items-center sm:justify-between">
               <span>No noise. Unsubscribe whenever you wish.</span>
-              <Link href="/privacy" onClick={dismiss} className="text-left underline decoration-white/15 underline-offset-4 hover:text-[#b896d1]">
+              <Link
+                href="/privacy"
+                onClick={dismiss}
+                className="text-left underline decoration-white/15 underline-offset-4 hover:text-[#b896d1]"
+              >
                 Privacy policy
               </Link>
             </div>
